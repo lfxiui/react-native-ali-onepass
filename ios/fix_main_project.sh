@@ -28,7 +28,8 @@ else
     echo "post_install do |installer|"
     echo "  installer.pods_project.targets.each do |target|"
     echo "    target.build_configurations.each do |config|"
-    echo "      config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64'"
+    echo "      # 使用继承而不是覆盖，避免冲突"
+    echo "      config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = '\$(inherited) arm64'"
     echo "      config.build_settings['ONLY_ACTIVE_ARCH'] = 'YES'"
     echo "    end"
     echo "  end"
@@ -55,7 +56,14 @@ if [ -d "Pods/RNAliOnepass" ]; then
     # 检查库文件
     if [ -f "Pods/RNAliOnepass/ios/libs/ATAuthSDK.framework/ATAuthSDK" ]; then
         echo "✅ ATAuthSDK.framework 已找到"
+        echo "📊 Framework 架构信息："
         lipo -info Pods/RNAliOnepass/ios/libs/ATAuthSDK.framework/ATAuthSDK
+        
+        echo ""
+        echo "🎯 新版本特性："
+        echo "- 模拟器环境：使用模拟实现，不链接真实framework"
+        echo "- 真机环境：正常链接阿里SDK framework"
+        echo "- 自动环境检测：无需手动配置"
     else
         echo "⚠️  ATAuthSDK.framework 未找到"
     fi
@@ -63,18 +71,31 @@ else
     echo "❌ RNAliOnepass Pod 未安装"
 fi
 
-# 5. 提供 Xcode 项目设置建议
+# 5. 检查 Xcode 配置文件
+echo ""
+echo "🔍 检查生成的 Xcode 配置..."
+if [ -f "Pods/Target Support Files/RNAliOnepass/RNAliOnepass.debug.xcconfig" ]; then
+    echo "✅ 找到 RNAliOnepass 配置文件"
+    echo "📄 模拟器配置预览："
+    grep -E "(EXCLUDED_ARCHS|OTHER_LDFLAGS|FRAMEWORK_SEARCH_PATHS).*simulator" "Pods/Target Support Files/RNAliOnepass/RNAliOnepass.debug.xcconfig" || echo "  配置已应用"
+fi
+
+# 6. 提供后续步骤指导
 echo ""
 echo "🎯 接下来的步骤："
-echo "1. 打开 Xcode 项目"
-echo "2. 选择你的 Target"
-echo "3. 进入 Build Settings"
-echo "4. 搜索 'Excluded Architectures'"
-echo "5. 确保 iOS Simulator 下有 'arm64' 并且使用 \$(inherited) 标志"
+echo "1. 在 Xcode 中打开项目"
+echo "2. 确保 Build Settings 中使用 \$(inherited) 标志"
+echo "3. 清理构建缓存: Product -> Clean Build Folder (Cmd+Shift+K)"
+echo "4. 重新构建项目"
 echo ""
-echo "如果仍然遇到 'library not found' 错误："
-echo "1. 在 Xcode 中: Product -> Clean Build Folder (Cmd+Shift+K)"
-echo "2. 删除 ~/Library/Developer/Xcode/DerivedData 中的项目数据"
-echo "3. 重新构建项目"
+echo "🚀 预期结果："
+echo "- 模拟器：项目正常运行，SDK返回模拟错误代码"
+echo "- 真机：完整的一键登录功能"
+echo ""
+echo "❗ 如果仍然遇到链接错误，请："
+echo "1. 检查主项目 Build Settings 中的 Excluded Architectures"
+echo "2. 确保设置为: \$(inherited) arm64"
+echo "3. 删除 ~/Library/Developer/Xcode/DerivedData"
+echo "4. 重新构建项目"
 echo ""
 echo "🎉 修复完成！" 

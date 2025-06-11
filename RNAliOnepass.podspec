@@ -12,16 +12,6 @@ Pod::Spec.new do |s|
   s.resources =  'ios/libs/ATAuthSDK.framework/ATAuthSDK.bundle'
   s.vendored_frameworks = 'ios/libs/**/*.framework'
   s.requires_arc = true
-  
-  # 配置编译器设置，避免模拟器链接问题
-  s.pod_target_xcconfig = {
-    'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64',
-    'ONLY_ACTIVE_ARCH' => 'YES',
-  }
-  
-  s.user_target_xcconfig = {
-    'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64'
-  }
 
   s.dependency "React"
   #s.dependency "others"

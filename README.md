@@ -20,7 +20,11 @@
 - ⚠️ 返回模拟错误代码（因为模拟器无法访问运营商网络）
 - 📱 真机环境下功能完全正常
 
-详细信息请查看 [iOS模拟器兼容性修复指南](./iOS_SIMULATOR_FIX.md)
+### 🆘 遇到问题？
+
+- **快速修复**：[5分钟解决方案](./QUICK_FIX.md)
+- **详细指南**：[完整修复指南](./iOS_SIMULATOR_FIX.md)
+- **常见错误**：`library not found` 或 CocoaPods 警告
 
 ## Getting started
 

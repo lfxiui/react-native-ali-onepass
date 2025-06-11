@@ -12,22 +12,20 @@ Pod::Spec.new do |s|
   s.resources =  'ios/libs/ATAuthSDK.framework/ATAuthSDK.bundle'
   s.vendored_frameworks = 'ios/libs/**/*.framework'
   s.requires_arc = true
-
-  # 系统框架依赖
-  s.frameworks = 'UIKit', 'Foundation', 'CoreTelephony', 'SystemConfiguration', 'Network'
-  s.libraries = 'c++', 'z'
-
-  # 解决模拟器兼容性问题的关键配置
+  
+  # 配置编译器设置，避免模拟器链接问题
   s.pod_target_xcconfig = {
     'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64',
-    'VALID_ARCHS[sdk=iphonesimulator*]' => 'x86_64',
-    'ONLY_ACTIVE_ARCH' => 'NO',
-    'OTHER_LDFLAGS' => '-ObjC'
+    'ONLY_ACTIVE_ARCH' => 'YES',
   }
+  
   s.user_target_xcconfig = {
     'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64'
   }
 
   s.dependency "React"
+  #s.dependency "others"
 
 end
+
+

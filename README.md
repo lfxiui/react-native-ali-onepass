@@ -1,5 +1,27 @@
 # react-native-ali-onepass
 
+阿里一键登录SDK for React Native
+
+## 🎯 特性
+
+- ✅ 支持 iOS 和 Android
+- ✅ **支持 iOS 模拟器运行**
+- ✅ TypeScript 支持
+- ✅ 完整的API接口
+- ✅ 详细的错误处理
+
+## 🚨 iOS 模拟器兼容性
+
+**版本 3.5.0+ 已完全支持 iOS 模拟器！**
+
+在模拟器环境下：
+- ✅ 项目可以正常编译和运行
+- ✅ SDK 接口保持一致，便于开发调试
+- ⚠️ 返回模拟错误代码（因为模拟器无法访问运营商网络）
+- 📱 真机环境下功能完全正常
+
+详细信息请查看 [iOS模拟器兼容性修复指南](./iOS_SIMULATOR_FIX.md)
+
 ## Getting started
 
 `$ npm install react-native-ali-onepass --save`
@@ -18,49 +40,7 @@
 1. In XCode, in the project navigator, right click `Libraries` ➜ `Add Files to [your project's name]`
 2. Go to `node_modules` ➜ `react-native-ali-onepass` and add `RNAliOnepass.xcodeproj`
 3. In XCode, in the project navigator, select your project. Add `libRNAliOnepass.a` to your project's `Build Phases` ➜ `Link Binary With Libraries`
-4. Run your project (`Cmd+R`)
-
-##### iOS模拟器支持
-
-如果在iOS模拟器上遇到架构相关的编译错误，我们提供了多种解决方案：
-
-**方法1: 自动修复脚本（推荐）**
-这个脚本会保持arm64架构支持，为Apple Silicon Mac提供最佳性能：
-
-```bash
-# 在react-native-ali-onepass目录下运行
-./scripts/fix_simulator_support.sh
-```
-
-**方法2: 使用现代XCFramework**
-创建支持所有架构的现代XCFramework格式：
-
-```bash
-# 在react-native-ali-onepass目录下运行
-./scripts/build_xcframework.sh
-```
-
-**方法3: Podfile配置（兼容性方案）**
-如果上述方法不工作，可以在你的项目的 `ios/Podfile` 中添加以下配置：
-
-```ruby
-post_install do |installer|
-  installer.pods_project.targets.each do |target|
-    target.build_configurations.each do |config|
-      # 确保支持所有需要的架构
-      config.build_settings['VALID_ARCHS'] = 'arm64 x86_64'
-      # 如果仍有问题，可以临时排除模拟器arm64
-      # config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64'
-    end
-  end
-end
-```
-
-**方法4: Xcode设置**
-1. 在Xcode中打开你的项目
-2. 选择你的项目target
-3. 在 `Build Settings` 中搜索 `Valid Architectures`
-4. 确保包含 `arm64` 和 `x86_64`
+4. Run your project (`Cmd+R`)<
 
 #### Android
 

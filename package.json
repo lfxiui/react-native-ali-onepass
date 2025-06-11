@@ -1,7 +1,7 @@
 {
   "name": "react-native-ali-onepass",
-  "version": "3.4.0",
-  "description": "",
+  "version": "3.5.0",
+  "description": "阿里一键登录SDK for React Native - 支持iOS模拟器",
   "main": "index.js",
   "scripts": {
     "release": "standard-version && npm run push",
@@ -18,7 +18,8 @@
     "quickpass",
     "auth",
     "onekey",
-    "login"
+    "login",
+    "simulator"
   ],
   "typings": "./index.d.ts",
   "files": [
@@ -28,7 +29,8 @@
     "RNAliOnepass.podspec",
     "package.json",
     "README.md",
-    "index.d.ts"
+    "index.d.ts",
+    "iOS_SIMULATOR_FIX.md"
   ],
   "author": "yoonzm",
   "license": "MIT",

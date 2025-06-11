@@ -1,0 +1,31 @@
+# 解决iOS模拟器兼容性问题的Podfile配置
+
+platform :ios, '9.0'
+require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
+
+target 'YourAppName' do
+  # React Native pods
+  pod 'React', :path => '../node_modules/react-native/'
+  pod 'React-Core', :path => '../node_modules/react-native/React'
+  
+  # 阿里一键登录SDK
+  pod 'RNAliOnepass', :path => '../node_modules/react-native-ali-onepass'
+  
+  # 自动链接
+  use_native_modules!
+end
+
+# 关键配置：解决模拟器兼容性问题
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      # 在模拟器上排除arm64架构
+      config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64'
+      config.build_settings['VALID_ARCHS[sdk=iphonesimulator*]'] = 'x86_64'
+      config.build_settings['ONLY_ACTIVE_ARCH'] = 'NO'
+      
+      # 设置最低部署目标
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '9.0'
+    end
+  end
+end

@@ -12,16 +12,37 @@
 
 ## 解决方案
 
-### 方案1: Podfile配置（推荐）
+### 方案1: 自动修复脚本（推荐，保持arm64支持）
 
-如果你的项目使用CocoaPods，在`ios/Podfile`中添加以下配置：
+运行我们提供的自动修复脚本，它会保持Apple Silicon模拟器的arm64性能优势：
+
+```bash
+cd react-native-ali-onepass
+./scripts/fix_simulator_support.sh
+```
+
+### 方案2: 现代XCFramework（最佳长期解决方案）
+
+使用Xcode的现代XCFramework格式，原生支持所有架构：
+
+```bash
+cd react-native-ali-onepass
+./scripts/build_xcframework.sh
+```
+
+### 方案3: Podfile配置（兼容性方案）
+
+如果你的项目使用CocoaPods，优先在`ios/Podfile`中添加以下配置：
 
 ```ruby
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     target.build_configurations.each do |config|
-      # 在模拟器上排除arm64架构
-      config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64'
+      # 确保支持所有架构
+      config.build_settings['VALID_ARCHS'] = 'arm64 x86_64'
+      
+      # 如果上面的配置不工作，可以临时排除模拟器arm64
+      # config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64'
     end
   end
 end

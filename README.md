@@ -22,33 +22,45 @@
 
 ##### iOS模拟器支持
 
-如果在iOS模拟器上遇到架构相关的编译错误，请按以下步骤解决：
+如果在iOS模拟器上遇到架构相关的编译错误，我们提供了多种解决方案：
 
-**方法1: 使用Podfile配置（推荐）**
-在你的项目的 `ios/Podfile` 中添加以下配置：
+**方法1: 自动修复脚本（推荐）**
+这个脚本会保持arm64架构支持，为Apple Silicon Mac提供最佳性能：
+
+```bash
+# 在react-native-ali-onepass目录下运行
+./scripts/fix_simulator_support.sh
+```
+
+**方法2: 使用现代XCFramework**
+创建支持所有架构的现代XCFramework格式：
+
+```bash
+# 在react-native-ali-onepass目录下运行
+./scripts/build_xcframework.sh
+```
+
+**方法3: Podfile配置（兼容性方案）**
+如果上述方法不工作，可以在你的项目的 `ios/Podfile` 中添加以下配置：
 
 ```ruby
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     target.build_configurations.each do |config|
-      # 排除模拟器的arm64架构
-      config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64'
+      # 确保支持所有需要的架构
+      config.build_settings['VALID_ARCHS'] = 'arm64 x86_64'
+      # 如果仍有问题，可以临时排除模拟器arm64
+      # config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64'
     end
   end
 end
 ```
 
-**方法2: Xcode设置**
+**方法4: Xcode设置**
 1. 在Xcode中打开你的项目
 2. 选择你的项目target
-3. 在 `Build Settings` 中搜索 `Excluded Architectures`
-4. 在 `Excluded Architectures` > `Any iOS Simulator SDK` 中添加 `arm64`
-
-**方法3: 使用提供的脚本**
-```bash
-# 在react-native-ali-onepass目录下运行
-./scripts/create_universal_framework.sh
-```
+3. 在 `Build Settings` 中搜索 `Valid Architectures`
+4. 确保包含 `arm64` 和 `x86_64`
 
 #### Android
 

@@ -1,4 +1,3 @@
-
 Pod::Spec.new do |s|
   s.name         = "RNAliOnepass"
   s.version      = "1.0.0"
@@ -14,6 +13,14 @@ Pod::Spec.new do |s|
   s.vendored_frameworks = 'ios/libs/**/*.framework'
   s.requires_arc = true
 
+  # 添加模拟器架构兼容配置
+  s.pod_target_xcconfig = {
+    'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64',
+    'VALID_ARCHS[sdk=iphonesimulator*]' => 'x86_64'
+  }
+  s.user_target_xcconfig = {
+    'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64'
+  }
 
   s.dependency "React"
   #s.dependency "others"

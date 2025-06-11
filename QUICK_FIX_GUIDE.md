@@ -47,6 +47,31 @@ pod install
 ### 步骤4: 重新编译
 在Xcode中重新编译你的项目，现在应该可以在模拟器上正常运行了。
 
+## 🔗 如果遇到 "library 'RNAliOnepass' not found" 错误
+
+### 快速解决方案：
+
+**对于React Native 0.60+（推荐）：**
+在你的主项目的 `ios/Podfile` 中确保包含：
+
+```ruby
+# 手动添加（如果自动链接失败）
+pod 'RNAliOnepass', :path => '../node_modules/react-native-ali-onepass'
+```
+
+然后运行：
+```bash
+cd your_project/ios
+rm -rf Pods Podfile.lock
+pod install
+```
+
+**对于手动链接：**
+1. 在Xcode中右击Libraries → Add Files
+2. 添加 `node_modules/react-native-ali-onepass/ios/RNAliOnepass.xcodeproj`
+3. 在Build Phases → Link Binary With Libraries中添加 `libRNAliOnepass.a`
+4. 在Build Settings → Other Linker Flags中添加 `-ObjC`
+
 ## 📋 验证修复
 运行以下命令确认修复成功：
 ```bash

@@ -86,13 +86,23 @@ typedef NS_ENUM(NSUInteger, PNSAuthType) {
 @property (nonatomic, strong) NSAttributedString *numberText;
 @property (nonatomic, assign) BOOL numberIsHidden;
 @property (nonatomic, copy) CGRect(^numberFrameBlock)(CGSize screenSize, CGSize superViewSize, CGRect frame);
+// 新增：手机号相关属性
+@property (nonatomic, strong) UIColor *numberColor;
+@property (nonatomic, strong) UIFont *numberFont;
+// 登录按钮相关属性
 @property (nonatomic, strong) NSAttributedString *loginBtnText;
 @property (nonatomic, strong) UIColor *loginBtnTextColor;
 @property (nonatomic, strong) UIColor *loginBtnBgColor;
+@property (nonatomic, strong) NSArray *loginBtnBgImgs;
+@property (nonatomic, assign) BOOL autoHideLoginLoading;
 @property (nonatomic, copy) CGRect(^loginBtnFrameBlock)(CGSize screenSize, CGSize superViewSize, CGRect frame);
 @property (nonatomic, strong) NSAttributedString *changeBtnTitle;
 @property (nonatomic, assign) BOOL changeBtnIsHidden;
 @property (nonatomic, copy) CGRect(^changeBtnFrameBlock)(CGSize screenSize, CGSize superViewSize, CGRect frame);
+// 弹窗相关属性
+@property (nonatomic, strong) NSArray *alertCornerRadiusArray;
+@property (nonatomic, copy) CGRect(^contentViewFrameBlock)(CGSize screenSize, CGSize contentSize, CGRect frame);
+// 隐私协议相关属性
 @property (nonatomic, assign) NSTextAlignment privacyAlignment;
 @property (nonatomic, strong) NSArray *privacyOne;
 @property (nonatomic, strong) NSArray *privacyTwo;

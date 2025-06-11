@@ -5,6 +5,8 @@
 ```
 ❌ ld: library 'RNAliOnepass' not found
 [!] Target overrides the EXCLUDED_ARCHS build setting
+❌ property 'numberColor' not found on object of type 'TXCustomModel *'
+❌ property 'loginBtnBgImgs' not found on object of type 'TXCustomModel *'
 ```
 
 ## 🚀 快速解决方案（5分钟内搞定）
@@ -49,7 +51,17 @@ pod install
 rm -rf ~/Library/Developer/Xcode/DerivedData
 ```
 
-### 步骤4：验证修复
+### 步骤4：更新到最新版本
+
+确保使用最新版本以获得完整的属性支持：
+
+```bash
+npm install react-native-ali-onepass@^3.5.1
+# 或者
+yarn add react-native-ali-onepass@^3.5.1
+```
+
+### 步骤5：验证修复
 
 重新运行你的项目，现在应该可以在模拟器上正常运行了！
 

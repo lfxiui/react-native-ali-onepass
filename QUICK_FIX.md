@@ -6,23 +6,25 @@
 ❌ ld: library 'RNAliOnepass' not found
 ❌ ld: building for 'iOS-simulator', but linking in object file built for 'iOS'
 ❌ error 'ATAuthSDK/ATAuthSDK.h' file not found (真机构建时)
+❌ 真机调试时报错"模拟器环境不支持一键登录" (3.5.5版本已修复)
 [!] Target overrides the EXCLUDED_ARCHS build setting
 ❌ property 'numberColor' not found on object of type 'TXCustomModel *'
 ```
 
-## 🚀 最终解决方案（3.5.4版本）
+## 🚀 最终解决方案（3.5.5版本）
 
 ### ✨ 核心策略：完全分离
 - **模拟器环境**：完全不链接任何阿里SDK framework，使用纯模拟实现
-- **真机环境**：正常链接所有framework，提供完整功能
+- **真机环境**：正常链接所有framework，提供完整功能  
 - **智能回退**：如果SDK不可用，自动使用模拟模式
+- **🆕 3.5.5修复**：解决真机环境下错误使用模拟器代码的问题
 
 ### 步骤1：更新到最新版本
 
 ```bash
-npm install react-native-ali-onepass@^3.5.4
+npm install react-native-ali-onepass@^3.5.5
 # 或者
-yarn add react-native-ali-onepass@^3.5.4
+yarn add react-native-ali-onepass@^3.5.5
 ```
 
 ### 步骤2：修复主项目 Podfile
@@ -92,12 +94,14 @@ npx react-native run-ios --device "your-device-name"
    'OTHER_LDFLAGS[sdk=iphoneos*]' => '-framework ATAuthSDK ...',
    ```
 
-3. **多重环境检测**：
+3. **多重环境检测** (3.5.5版本优化)：
    ```objc
-   #if TARGET_OS_SIMULATOR || defined(RN_ALI_ONEPASS_SIMULATOR) || defined(RN_ALI_ONEPASS_FALLBACK_SIMULATOR)
-   // 完全使用模拟实现，无任何SDK依赖
+   #if TARGET_OS_SIMULATOR || defined(RN_ALI_ONEPASS_SIMULATOR)
+   // 模拟器环境：使用模拟实现
+   #elif defined(RN_ALI_ONEPASS_DEVICE) && __has_include(<ATAuthSDK/ATAuthSDK.h>)
+   // 真机环境且SDK可用：使用真实阿里SDK
    #else
-   // 正常SDK功能
+   // 回退模式：SDK不可用时使用模拟实现
    #endif
    ```
 
@@ -130,7 +134,7 @@ chmod +x fix_main_project.sh
 1. **版本确认**：
    ```bash
    npm list react-native-ali-onepass
-   # 应该显示 3.5.4 或更高版本
+   # 应该显示 3.5.5 或更高版本
    ```
 
 2. **Pod配置检查**：

@@ -1,7 +1,7 @@
 #import "RNAliOnepass.h"
 
 // 模拟器环境下的常量定义
-#ifdef RN_ALI_ONEPASS_USE_SIMULATOR_MODE
+#if TARGET_OS_SIMULATOR || defined(RN_ALI_ONEPASS_FALLBACK_SIMULATOR)
 // 模拟阿里SDK的常量和类型
 #define PNSCodeSuccess @"600000"
 #define PNSCodeLoginControllerPresentSuccess @"600001"
@@ -33,20 +33,10 @@ typedef NS_ENUM(NSUInteger, PNSAuthType) {
         // 添加环境检测日志
         NSLog(@"[RNAliOnepass] 运行环境检测:");
         NSLog(@"[RNAliOnepass] - TARGET_OS_SIMULATOR: %d", TARGET_OS_SIMULATOR);
-        #ifdef RN_ALI_ONEPASS_SIMULATOR
-        NSLog(@"[RNAliOnepass] - RN_ALI_ONEPASS_SIMULATOR: 已定义");
-        #endif
-        #ifdef RN_ALI_ONEPASS_DEVICE  
-        NSLog(@"[RNAliOnepass] - RN_ALI_ONEPASS_DEVICE: 已定义");
-        #endif
         #ifdef RN_ALI_ONEPASS_FALLBACK_SIMULATOR
-        NSLog(@"[RNAliOnepass] - RN_ALI_ONEPASS_FALLBACK_SIMULATOR: 已定义 (头文件不可用)");
-        #endif
-        #ifdef RN_ALI_ONEPASS_USE_SIMULATOR_MODE
+        NSLog(@"[RNAliOnepass] - 使用模拟器模式 (头文件不可用回退)");
+        #else
         NSLog(@"[RNAliOnepass] - 使用模拟器模式");
-        #endif
-        #ifdef RN_ALI_ONEPASS_USE_DEVICE_MODE
-        NSLog(@"[RNAliOnepass] - 使用真机模式");
         #endif
     });
     return instance;

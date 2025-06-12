@@ -74,7 +74,41 @@ typedef NS_ENUM(NSUInteger, PNSAuthType) {
 
 // 模拟TXCustomModel类
 @interface TXCustomModel : NSObject
-// 此处可以根据需要保留或清空属性，因为模拟环境下通常用不到UI配置
+@property (nonatomic, strong) NSArray *alertCornerRadiusArray;
+@property (nonatomic, assign) BOOL prefersStatusBarHidden;
+@property (nonatomic, copy) CGRect(^contentViewFrameBlock)(CGSize screenSize, CGSize contentSize, CGRect frame);
+@property (nonatomic, strong) UIImage *logoImage;
+@property (nonatomic, assign) BOOL logoIsHidden;
+@property (nonatomic, copy) CGRect(^logoFrameBlock)(CGSize screenSize, CGSize superViewSize, CGRect frame);
+@property (nonatomic, strong) UIColor *numberColor;
+@property (nonatomic, strong) UIFont *numberFont;
+@property (nonatomic, copy) CGRect(^numberFrameBlock)(CGSize screenSize, CGSize superViewSize, CGRect frame);
+@property (nonatomic, strong) NSAttributedString *sloganText;
+@property (nonatomic, copy) CGRect(^sloganFrameBlock)(CGSize screenSize, CGSize superViewSize, CGRect frame);
+@property (nonatomic, strong) NSAttributedString *loginBtnText;
+@property (nonatomic, strong) NSArray *loginBtnBgImgs;
+@property (nonatomic, assign) BOOL autoHideLoginLoading;
+@property (nonatomic, copy) CGRect(^loginBtnFrameBlock)(CGSize screenSize, CGSize superViewSize, CGRect frame);
+@property (nonatomic, strong) NSAttributedString *changeBtnTitle;
+@property (nonatomic, assign) BOOL changeBtnIsHidden;
+@property (nonatomic, copy) CGRect(^changeBtnFrameBlock)(CGSize screenSize, CGSize superViewSize, CGRect frame);
+@property (nonatomic, assign) NSTextAlignment privacyAlignment;
+@property (nonatomic, strong) NSArray *privacyOne;
+@property (nonatomic, strong) NSArray *privacyTwo;
+@property (nonatomic, assign) BOOL checkBoxIsChecked;
+@property (nonatomic, strong) UIFont *privacyFont;
+@property (nonatomic, strong) NSArray *privacyColors;
+@property (nonatomic, strong) NSString *privacyOperatorPreText;
+@property (nonatomic, strong) NSString *privacyOperatorSufText;
+@property (nonatomic, strong) NSString *privacyPreText;
+@property (nonatomic, strong) NSString *privacySufText;
+@property (nonatomic, copy) CGRect(^privacyFrameBlock)(CGSize screenSize, CGSize superViewSize, CGRect frame);
+@property (nonatomic, assign) BOOL checkBoxIsHidden;
+@property (nonatomic, assign) BOOL alertBarIsHidden;
+@property (nonatomic, copy) void(^customViewBlock)(UIView *superCustomView);
+@property (nonatomic, copy) void(^customViewLayoutBlock)(CGSize screenSize, CGRect contentViewFrame, CGRect navFrame, CGRect titleBarFrame, CGRect logoFrame, CGRect sloganFrame, CGRect numberFrame, CGRect loginFrame, CGRect changeBtnFrame, CGRect privacyFrame);
+@property (nonatomic, strong) NSAttributedString *alertTitle;
+@property (nonatomic, strong) UIImage *alertCloseImage;
 @end
 
 @implementation TXCustomModel
@@ -93,6 +127,15 @@ typedef NS_ENUM(NSUInteger, PNSAuthType) {
 
 #endif
 
+#define TX_SCREEN_HEIGHT [[UIScreen mainScreen] bounds].size.height
+#define TX_SCREEN_WIDTH [[UIScreen mainScreen] bounds].size.width
+
+//竖屏弹窗
+#define TX_Alert_Default_Left_Padding         42
+#define TX_Alert_Default_Top_Padding          115
+
+/**横屏弹窗*/
+#define TX_Alert_Horizontal_Default_Left_Padding      80.0
 
 @implementation RNAliOnepass {
     TXCommonHandler *tXCommonHandler;
@@ -301,7 +344,7 @@ RCT_EXPORT_METHOD(setDialogUIConfig:(NSDictionary *)config resolve:(RCTPromiseRe
         CGFloat width = frame.size.width;
         CGFloat height = frame.size.height;
         if (numberFieldOffsetX != nil) {
-            x = [numberFieldOffsetY floatValue];
+            x = [numberFieldOffsetX floatValue];
         }
         if (numberFieldOffsetY != nil) {
             y = [numberFieldOffsetY floatValue];
@@ -349,8 +392,8 @@ RCT_EXPORT_METHOD(setDialogUIConfig:(NSDictionary *)config resolve:(RCTPromiseRe
             y = [logBtnOffsetY floatValue];
         }
         if (logBtnMarginLeftAndRight != nil) {
-            width = screenSize.width - [logBtnMarginLeftAndRight floatValue] * 2;
-            x = [logBtnMarginLeftAndRight floatValue] / 2;
+            width = superViewSize.width - [logBtnMarginLeftAndRight floatValue] * 2;
+            x = [logBtnMarginLeftAndRight floatValue];
         }
         return CGRectMake(x, y, width, height);
     };
@@ -424,7 +467,7 @@ RCT_EXPORT_METHOD(setDialogUIConfig:(NSDictionary *)config resolve:(RCTPromiseRe
         CGFloat width = frame.size.width;
         CGFloat height = frame.size.height;
         if (privacyBottomOffsetY != nil) {
-            y = [privacyBottomOffsetY floatValue];
+            y = superViewSize.height - [privacyBottomOffsetY floatValue];
         }
         return CGRectMake(x, y, width, height);
     };
@@ -468,14 +511,11 @@ RCT_EXPORT_METHOD(setDialogUIConfig:(NSDictionary *)config resolve:(RCTPromiseRe
             };
             tXCustomModel.customViewLayoutBlock = ^(CGSize screenSize, CGRect contentViewFrame, CGRect navFrame, CGRect titleBarFrame, CGRect logoFrame, CGRect sloganFrame, CGRect numberFrame, CGRect loginFrame, CGRect changeBtnFrame, CGRect privacyFrame) {
                 CGRect frame = customBtn.frame;
-                frame.origin.x = contentViewFrame.size.width - closeWidth; //screenSize.width - contentViewFrame.origin.x;
-                CGFloat ts = screenSize.width - contentViewFrame.origin.x;
-                frame.origin.y = CGRectGetMinY(navFrame);
-//                frame.size.width = contentViewFrame.size.width - frame.origin.x * 2;
+                frame.origin.x = contentViewFrame.size.width - closeWidth;
+                frame.origin.y = 0;
                 customBtn.frame = frame;
             };
         } else {
-            NSString *navColor = [config objectForKey:[self methodName2KeyName:@"setNavColor"]];
             NSString *navText = [config objectForKey:[self methodName2KeyName:@"setNavText"]];
             NSString *navTextColor = [config objectForKey:[self methodName2KeyName:@"setNavTextColor"]];
             NSString *navTextSize = [config objectForKey:[self methodName2KeyName:@"setNavTextSize"]];
@@ -487,9 +527,7 @@ RCT_EXPORT_METHOD(setDialogUIConfig:(NSDictionary *)config resolve:(RCTPromiseRe
                 tXCustomModel.alertCloseImage = [UIImage imageNamed:navReturnImgPath];
             }
         }
-
     }
-
     resolve(@"");
 }
 
@@ -501,6 +539,20 @@ RCT_EXPORT_METHOD(setDialogUIConfig:(NSDictionary *)config resolve:(RCTPromiseRe
 
 -(NSArray<NSString *> *)supportedEvents {
     return @[@"onTokenSuccess", @"onTokenFailed"];
+}
+
+// 将方法名转为key名 主要是和安卓端的逻辑保持一致
+-(NSString *)methodName2KeyName:(NSString *)methodName {
+    NSString *result = @"";
+    if(methodName == nil) {
+        return result;
+    }
+    if ([methodName hasPrefix:@"set"]) {
+        result = [methodName substringFromIndex:3];
+    }
+    NSString *firstChar = [result substringWithRange:NSMakeRange(0, 1)];
+    NSString *otherChar = [result substringFromIndex:1];
+    return [[firstChar lowercaseString] stringByAppendingString:otherChar];
 }
 
 - (UIColor *) colorWithHexString: (NSString *)color

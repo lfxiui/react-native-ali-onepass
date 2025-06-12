@@ -27,7 +27,7 @@ Pod::Spec.new do |s|
     'OTHER_LDFLAGS[sdk=iphonesimulator*]' => '$(inherited)',
     
     # 真机环境：正常配置framework
-    'FRAMEWORK_SEARCH_PATHS[sdk=iphoneos*]' => '$(inherited) $(PODS_TARGET_SRCROOT)/ios/libs/ATAuthSDK.framework $(PODS_TARGET_SRCROOT)/ios/libs/YTXMonitor.framework $(PODS_TARGET_SRCROOT)/ios/libs/YTXOperators.framework',
+    'FRAMEWORK_SEARCH_PATHS[sdk=iphoneos*]' => '$(inherited) "${PODS_TARGET_SRCROOT}/ios/libs"',
     'OTHER_LDFLAGS[sdk=iphoneos*]' => '$(inherited) -framework ATAuthSDK -framework YTXMonitor -framework YTXOperators',
     'HEADER_SEARCH_PATHS[sdk=iphoneos*]' => '$(inherited) $(PODS_TARGET_SRCROOT)/ios/libs/ATAuthSDK.framework/Headers $(PODS_TARGET_SRCROOT)/ios/libs/YTXMonitor.framework/Headers $(PODS_TARGET_SRCROOT)/ios/libs/YTXOperators.framework/Headers',
     

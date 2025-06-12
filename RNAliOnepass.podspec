@@ -1,8 +1,8 @@
 Pod::Spec.new do |s|
   s.name         = "RNAliOnepass"
-  s.version      = "1.0.0"
+  s.version      = "3.5.6"
   s.summary      = "RNAliOnepass"
-  s.description  = "RNAliOnepass"
+  s.description  = "RNAliOnepass - iOS模拟器兼容版本"
   s.homepage     = "https://github.com/yoonzm/react-native-ali-onepass"
   s.license      = "MIT"
   s.author             = { "yoonzm" => "yinzhim@gmail.com" }
@@ -12,28 +12,25 @@ Pod::Spec.new do |s|
   
   s.ios.deployment_target = '9.0'
   s.requires_arc = true
-
-  # 只保留framework文件，但不自动链接
+  
+  # 保留所有framework文件但不自动链接
   s.preserve_paths = 'ios/libs/**/*.framework', 'ios/libs/**/*.bundle'
   
-  # 配置构建设置 - 关键是条件性地包含framework
+  # 简化的构建设置
   s.pod_target_xcconfig = {
-    # 模拟器环境：排除arm64架构，不链接framework
+    # 模拟器环境配置
     'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64',
     'VALID_ARCHS[sdk=iphonesimulator*]' => 'x86_64',
     
-    # 模拟器环境：清空framework相关设置
+    # 模拟器：不链接任何阿里framework
     'FRAMEWORK_SEARCH_PATHS[sdk=iphonesimulator*]' => '$(inherited)',
     'OTHER_LDFLAGS[sdk=iphonesimulator*]' => '$(inherited)',
+    'HEADER_SEARCH_PATHS[sdk=iphonesimulator*]' => '$(inherited)',
     
-    # 真机环境：正常配置framework
-    'FRAMEWORK_SEARCH_PATHS[sdk=iphoneos*]' => '$(inherited) $(PODS_TARGET_SRCROOT)/ios/libs/ATAuthSDK.framework $(PODS_TARGET_SRCROOT)/ios/libs/YTXMonitor.framework $(PODS_TARGET_SRCROOT)/ios/libs/YTXOperators.framework',
+    # 真机环境：链接阿里framework
+    'FRAMEWORK_SEARCH_PATHS[sdk=iphoneos*]' => '$(inherited) "$(PODS_TARGET_SRCROOT)/ios/libs"',
+    'HEADER_SEARCH_PATHS[sdk=iphoneos*]' => '$(inherited) "$(PODS_TARGET_SRCROOT)/ios/libs/ATAuthSDK.framework/Headers"',
     'OTHER_LDFLAGS[sdk=iphoneos*]' => '$(inherited) -framework ATAuthSDK -framework YTXMonitor -framework YTXOperators',
-    'HEADER_SEARCH_PATHS[sdk=iphoneos*]' => '$(inherited) $(PODS_TARGET_SRCROOT)/ios/libs/ATAuthSDK.framework/Headers $(PODS_TARGET_SRCROOT)/ios/libs/YTXMonitor.framework/Headers $(PODS_TARGET_SRCROOT)/ios/libs/YTXOperators.framework/Headers',
-    
-    # 预处理器定义
-    'GCC_PREPROCESSOR_DEFINITIONS[sdk=iphoneos*]' => '$(inherited) RN_ALI_ONEPASS_DEVICE=1',
-    'GCC_PREPROCESSOR_DEFINITIONS[sdk=iphonesimulator*]' => '$(inherited) RN_ALI_ONEPASS_SIMULATOR=1'
   }
   
   # 用户目标配置
@@ -42,7 +39,6 @@ Pod::Spec.new do |s|
   }
 
   s.dependency "React"
-  #s.dependency "others"
 
 end
 

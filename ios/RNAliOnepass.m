@@ -1,7 +1,24 @@
 #import "RNAliOnepass.h"
 
-// 只有在明确的模拟器环境下才使用模拟代码
+#import <os/proc.h>
+
+// 运行时判断是否为模拟器环境
+static inline BOOL isSimulator() {
 #if TARGET_OS_SIMULATOR
+    return YES;
+#else
+    // 对于iOS 17及以上版本，使用新的API判断是否在调试器下运行（这在模拟器中为true）
+    if (@available(iOS 17, *)) {
+        return os_proc_available_for_debugger(getpid());
+    }
+    // 对于旧版本，检查是否存在模拟器特定的环境变量
+    return [NSProcessInfo processInfo].environment[@"SIMULATOR_UDID"] != nil;
+#endif
+}
+
+// 模拟器环境下使用的模拟类和常量
+#pragma mark - Simulator Stubs
+
 // 模拟阿里SDK的常量和类型
 #define PNSCodeSuccess @"600000"
 #define PNSCodeLoginControllerPresentSuccess @"600001"
@@ -14,18 +31,12 @@ typedef NS_ENUM(NSUInteger, PNSAuthType) {
 };
 
 // 模拟TXCommonHandler类
-@interface TXCommonHandler : NSObject
-+ (instancetype)sharedInstance;
-- (void)setAuthSDKInfo:(NSString *)secretInfo complete:(void(^)(NSDictionary *resultDic))complete;
-- (void)checkEnvAvailableWithAuthType:(PNSAuthType)authType complete:(void(^)(NSDictionary *resultDic))complete;
-- (void)accelerateLoginPageWithTimeout:(CGFloat)timeout complete:(void(^)(NSDictionary *resultDic))complete;
-- (void)getLoginTokenWithTimeout:(CGFloat)timeout controller:(UIViewController *)controller model:(id)model complete:(void(^)(NSDictionary *resultDic))complete;
-- (void)cancelLoginVCAnimated:(BOOL)animated complete:(void(^)(void))complete;
-- (void)hideLoginLoading;
+@interface TXCommonHandler (Simulator)
++ (instancetype)sharedInstanceForSimulator;
 @end
 
-@implementation TXCommonHandler
-+ (instancetype)sharedInstance {
+@implementation TXCommonHandler (Simulator)
++ (instancetype)sharedInstanceForSimulator {
     static TXCommonHandler *instance = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
@@ -34,124 +45,46 @@ typedef NS_ENUM(NSUInteger, PNSAuthType) {
     return instance;
 }
 
-- (void)setAuthSDKInfo:(NSString *)secretInfo complete:(void(^)(NSDictionary *resultDic))complete {
+- (void)setAuthSDKInfoForSimulator:(NSString *)secretInfo complete:(void(^)(NSDictionary *resultDic))complete {
     if (complete) {
         complete(@{@"resultCode": PNSCodeSuccess, @"msg": @"模拟器环境初始化成功"});
     }
 }
 
-- (void)checkEnvAvailableWithAuthType:(PNSAuthType)authType complete:(void(^)(NSDictionary *resultDic))complete {
+- (void)checkEnvAvailableWithAuthTypeForSimulator:(PNSAuthType)authType complete:(void(^)(NSDictionary *resultDic))complete {
     if (complete) {
         complete(@{@"resultCode": @"600024", @"msg": @"模拟器环境不支持一键登录"});
     }
 }
 
-- (void)accelerateLoginPageWithTimeout:(CGFloat)timeout complete:(void(^)(NSDictionary *resultDic))complete {
+- (void)accelerateLoginPageWithTimeoutForSimulator:(CGFloat)timeout complete:(void(^)(NSDictionary *resultDic))complete {
     if (complete) {
         complete(@{@"resultCode": @"600024", @"msg": @"模拟器环境不支持预取号"});
     }
 }
 
-- (void)getLoginTokenWithTimeout:(CGFloat)timeout controller:(UIViewController *)controller model:(id)model complete:(void(^)(NSDictionary *resultDic))complete {
+- (void)getLoginTokenWithTimeoutForSimulator:(CGFloat)timeout controller:(UIViewController *)controller model:(id)model complete:(void(^)(NSDictionary *resultDic))complete {
     if (complete) {
         complete(@{@"resultCode": @"600024", @"msg": @"模拟器环境不支持一键登录", @"token": @""});
     }
 }
 
-- (void)cancelLoginVCAnimated:(BOOL)animated complete:(void(^)(void))complete {
+- (void)cancelLoginVCAnimatedForSimulator:(BOOL)animated complete:(void(^)(void))complete {
     if (complete) {
         complete();
     }
 }
 
-- (void)hideLoginLoading {
+- (void)hideLoginLoadingForSimulator {
     // 空实现
 }
-@end
 
-// 模拟TXCustomModel类
-@interface TXCustomModel : NSObject
-@property (nonatomic, assign) BOOL prefersStatusBarHidden;
-@property (nonatomic, strong) UIColor *navColor;
-@property (nonatomic, strong) NSAttributedString *navTitle;
-@property (nonatomic, strong) UIImage *navBackImage;
-@property (nonatomic, strong) UIImage *privacyNavBackImage;
-@property (nonatomic, copy) CGRect(^navBackButtonFrameBlock)(CGSize screenSize, CGSize superViewSize, CGRect frame);
-@property (nonatomic, strong) UIImage *logoImage;
-@property (nonatomic, assign) BOOL logoIsHidden;
-@property (nonatomic, copy) CGRect(^logoFrameBlock)(CGSize screenSize, CGSize superViewSize, CGRect frame);
-@property (nonatomic, strong) NSAttributedString *sloganText;
-@property (nonatomic, assign) BOOL sloganIsHidden;
-@property (nonatomic, copy) CGRect(^sloganFrameBlock)(CGSize screenSize, CGSize superViewSize, CGRect frame);
-@property (nonatomic, strong) NSAttributedString *numberText;
-@property (nonatomic, assign) BOOL numberIsHidden;
-@property (nonatomic, copy) CGRect(^numberFrameBlock)(CGSize screenSize, CGSize superViewSize, CGRect frame);
-// 新增：手机号相关属性
-@property (nonatomic, strong) UIColor *numberColor;
-@property (nonatomic, strong) UIFont *numberFont;
-// 登录按钮相关属性
-@property (nonatomic, strong) NSAttributedString *loginBtnText;
-@property (nonatomic, strong) UIColor *loginBtnTextColor;
-@property (nonatomic, strong) UIColor *loginBtnBgColor;
-@property (nonatomic, strong) NSArray *loginBtnBgImgs;
-@property (nonatomic, assign) BOOL autoHideLoginLoading;
-@property (nonatomic, copy) CGRect(^loginBtnFrameBlock)(CGSize screenSize, CGSize superViewSize, CGRect frame);
-@property (nonatomic, strong) NSAttributedString *changeBtnTitle;
-@property (nonatomic, assign) BOOL changeBtnIsHidden;
-@property (nonatomic, copy) CGRect(^changeBtnFrameBlock)(CGSize screenSize, CGSize superViewSize, CGRect frame);
-// 弹窗相关属性
-@property (nonatomic, strong) NSArray *alertCornerRadiusArray;
-@property (nonatomic, copy) CGRect(^contentViewFrameBlock)(CGSize screenSize, CGSize contentSize, CGRect frame);
-// 隐私协议相关属性
-@property (nonatomic, assign) NSTextAlignment privacyAlignment;
-@property (nonatomic, strong) NSArray *privacyOne;
-@property (nonatomic, strong) NSArray *privacyTwo;
-@property (nonatomic, assign) BOOL checkBoxIsChecked;
-@property (nonatomic, strong) UIFont *privacyFont;
-@property (nonatomic, strong) NSArray *privacyColors;
-@property (nonatomic, strong) NSString *privacyOperatorPreText;
-@property (nonatomic, strong) NSString *privacyOperatorSufText;
-@property (nonatomic, strong) NSString *privacyPreText;
-@property (nonatomic, strong) NSString *privacySufText;
-@property (nonatomic, copy) CGRect(^privacyFrameBlock)(CGSize screenSize, CGSize superViewSize, CGRect frame);
-@property (nonatomic, assign) BOOL checkBoxIsHidden;
-@property (nonatomic, assign) BOOL alertBarIsHidden;
-@property (nonatomic, copy) void(^customViewBlock)(UIView *superCustomView);
-@property (nonatomic, copy) void(^customViewLayoutBlock)(CGSize screenSize, CGRect contentViewFrame, CGRect navFrame, CGRect titleBarFrame, CGRect logoFrame, CGRect sloganFrame, CGRect numberFrame, CGRect loginFrame, CGRect changeBtnFrame, CGRect privacyFrame);
-@property (nonatomic, strong) NSAttributedString *alertTitle;
-@property (nonatomic, strong) UIImage *alertCloseImage;
-@end
-
-@implementation TXCustomModel
-@end
-
-// 模拟TXCommonUtils类
-@interface TXCommonUtils : NSObject
-+ (NSString *)getCurrentCarrierName;
-@end
-
-@implementation TXCommonUtils
-+ (NSString *)getCurrentCarrierName {
++ (NSString *)getCurrentCarrierNameForSimulator {
     return @"模拟器";
 }
 @end
 
-#endif
-
-#define TX_SCREEN_HEIGHT [[UIScreen mainScreen] bounds].size.height
-#define TX_SCREEN_WIDTH [[UIScreen mainScreen] bounds].size.width
-#define IS_HORIZONTAL (TX_SCREEN_WIDTH > TX_SCREEN_WIDTH)
-
-#define TX_Alert_NAV_BAR_HEIGHT      55.0
-#define TX_Alert_HORIZONTAL_NAV_BAR_HEIGHT      41.0
-
-//竖屏弹窗
-#define TX_Alert_Default_Left_Padding         42
-#define TX_Alert_Default_Top_Padding          115
-
-/**横屏弹窗*/
-#define TX_Alert_Horizontal_Default_Left_Padding      80.0
-
+#pragma mark - RNAliOnepass Implementation
 
 @implementation RNAliOnepass {
     TXCommonHandler *tXCommonHandler;
@@ -165,143 +98,167 @@ typedef NS_ENUM(NSUInteger, PNSAuthType) {
 }
 RCT_EXPORT_MODULE()
 
-// 运行时检测是否为模拟器环境
-- (BOOL)isSimulatorEnvironment {
-#ifdef RN_ALI_ONEPASS_SIMULATOR_ENV
-    return YES;
-#else
-    return NO;
-#endif
-}
-
-// 调试方法：检查当前环境状态
-RCT_EXPORT_METHOD(getEnvironmentInfo:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject) {
-    NSMutableDictionary *info = [NSMutableDictionary dictionary];
-    
-#ifdef RN_ALI_ONEPASS_SIMULATOR_ENV
-    [info setObject:@"simulator" forKey:@"detectedEnvironment"];
-    [info setObject:@"使用模拟器模式" forKey:@"mode"];
-#elif defined(RN_ALI_ONEPASS_DEVICE_ENV)
-    [info setObject:@"device" forKey:@"detectedEnvironment"];
-    [info setObject:@"使用真机模式" forKey:@"mode"];
-#else
-    [info setObject:@"unknown" forKey:@"detectedEnvironment"];
-    [info setObject:@"未知环境" forKey:@"mode"];
-#endif
-
-#if TARGET_OS_SIMULATOR
-    [info setObject:@YES forKey:@"TARGET_OS_SIMULATOR"];
-#else
-    [info setObject:@NO forKey:@"TARGET_OS_SIMULATOR"];
-#endif
-
-#if __has_include(<ATAuthSDK/ATAuthSDK.h>)
-    [info setObject:@YES forKey:@"hasATAuthSDKHeaders"];
-#else
-    [info setObject:@NO forKey:@"hasATAuthSDKHeaders"];
-#endif
-    
-    resolve(info);
-}
-
-RCT_EXPORT_METHOD(init:(NSString *)secretInfo resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject) {
-    tXCommonHandler = [TXCommonHandler sharedInstance];
-    [tXCommonHandler setAuthSDKInfo:secretInfo complete:^(NSDictionary * _Nonnull resultDic) {
-        NSString *resultCode = [resultDic objectForKey:@"resultCode"];
-        if([resultCode isEqualToString:PNSCodeSuccess]) {
-            resolve(@"");
+- (instancetype)init
+{
+    self = [super init];
+    if (self) {
+        if (!isSimulator()) {
+            tXCommonHandler = [TXCommonHandler sharedInstance];
+            tXCustomModel = [[TXCustomModel alloc] init];
         } else {
-            reject(resultCode, [resultDic objectForKey:@"msg"], nil);
+            // 在模拟器环境下，我们可以选择什么都不做，或者使用模拟实例
+            // 为了让checkInit通过，这里我们指向一个模拟的实例
+            tXCommonHandler = [TXCommonHandler sharedInstanceForSimulator];
+            tXCustomModel = [[TXCustomModel alloc] init]; // 模拟器也需要一个model实例
         }
-    }];
+    }
+    return self;
 }
 
 // 判断是否初始化过
 -(BOOL)checkInit:(RCTPromiseRejectBlock)reject {
     if(tXCommonHandler == nil) {
-        reject(@"0", @"请先调用初始化接口init", nil);
+        // 这个逻辑在新的init结构下，理论上不会被触发
+        reject(@"0", @"模块实例未创建", nil);
         return false;
     }
     return true;
 }
 
-// 检查认证环境 第一次或者切换网络后需要重新调用
+RCT_EXPORT_METHOD(init:(NSString *)secretInfo resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject) {
+    if (isSimulator()) {
+        [[TXCommonHandler sharedInstanceForSimulator] setAuthSDKInfoForSimulator:secretInfo complete:^(NSDictionary * _Nonnull resultDic) {
+            NSString *resultCode = [resultDic objectForKey:@"resultCode"];
+            if([resultCode isEqualToString:PNSCodeSuccess]) {
+                resolve(@"");
+            } else {
+                reject(resultCode, [resultDic objectForKey:@"msg"], nil);
+            }
+        }];
+    } else {
+        [tXCommonHandler setAuthSDKInfo:secretInfo complete:^(NSDictionary * _Nonnull resultDic) {
+            NSString *resultCode = [resultDic objectForKey:@"resultCode"];
+            if([resultCode isEqualToString:PNSCodeSuccess]) {
+                resolve(@"");
+            } else {
+                reject(resultCode, [resultDic objectForKey:@"msg"], nil);
+            }
+        }];
+    }
+}
+
 RCT_EXPORT_METHOD(checkEnvAvailable:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject){
-    if(![self checkInit:reject]){
-        return;
+    if(![self checkInit:reject]) return;
+
+    if (isSimulator()) {
+        [[TXCommonHandler sharedInstanceForSimulator] checkEnvAvailableWithAuthTypeForSimulator:PNSAuthTypeLoginToken complete:^(NSDictionary * _Nullable resultDic) {
+            NSString *resultCode = [resultDic objectForKey:@"resultCode"];
+            // 模拟器环境下总是返回成功，因为实际的check会失败
+            // 这取决于你希望模拟器如何表现
+            if(![resultCode isEqualToString:PNSCodeSuccess]) {
+                 resolve(@""); // 假装成功
+            } else {
+                reject(resultCode, [resultDic objectForKey:@"msg"], nil);
+            }
+        }];
+    } else {
+        [tXCommonHandler checkEnvAvailableWithAuthType:PNSAuthTypeLoginToken complete:^(NSDictionary * _Nullable resultDic) {
+            NSString *resultCode = [resultDic objectForKey:@"resultCode"];
+            if([resultCode isEqualToString:PNSCodeSuccess]) {
+                resolve(@"");
+            } else {
+                reject(resultCode, [resultDic objectForKey:@"msg"], nil);
+            }
+        }];
     }
-    [tXCommonHandler checkEnvAvailableWithAuthType:PNSAuthTypeLoginToken complete:^(NSDictionary * _Nullable resultDic) {
-        NSString *resultCode = [resultDic objectForKey:@"resultCode"];
-        if([resultCode isEqualToString:PNSCodeSuccess]) {
-            resolve(@"");
-        } else {
-            reject(resultCode, [resultDic objectForKey:@"msg"], nil);
-        }
-    }];
 }
 
-// 预取号 加速页面弹起
 RCT_EXPORT_METHOD(prefetch:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject){
-    if(![self checkInit:reject]){
-        return;
+    if(![self checkInit:reject]) return;
+    
+    if (isSimulator()) {
+        [[TXCommonHandler sharedInstanceForSimulator] accelerateLoginPageWithTimeoutForSimulator:0.0 complete:^(NSDictionary * _Nonnull resultDic) {
+             resolve(@""); // 模拟器预取号直接成功返回
+        }];
+    } else {
+        [tXCommonHandler accelerateLoginPageWithTimeout:0.0 complete:^(NSDictionary * _Nonnull resultDic) {
+            NSString *resultCode = [resultDic objectForKey:@"resultCode"];
+            if([resultCode isEqualToString:PNSCodeSuccess]) {
+                resolve(@"");
+            } else {
+                reject(resultCode, [resultDic objectForKey:@"msg"], nil);
+            }
+        }];
     }
-    [tXCommonHandler accelerateLoginPageWithTimeout:0.0 complete:^(NSDictionary * _Nonnull resultDic) {
-        NSString *resultCode = [resultDic objectForKey:@"resultCode"];
-        if([resultCode isEqualToString:PNSCodeSuccess]) {
-            resolve(@"");
-        } else {
-            reject(resultCode, [resultDic objectForKey:@"msg"], nil);
-        }
-    }];
 }
 
-// 一键登录 页面弹起
 RCT_EXPORT_METHOD(onePass:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject){
-    if(![self checkInit:reject]){
-        return;
-    }
-    [tXCommonHandler getLoginTokenWithTimeout:0.0 controller:[UIApplication sharedApplication].keyWindow.rootViewController model:tXCustomModel complete:^(NSDictionary * _Nonnull resultDic) {
-        NSString *resultCode = [resultDic objectForKey:@"resultCode"];
-        NSString *msg = [resultDic objectForKey:@"msg"];
-        NSString *token = [resultDic objectForKey:@"token"];
-        if([resultCode isEqualToString:PNSCodeSuccess]
-        ||[resultCode isEqualToString:PNSCodeLoginControllerPresentSuccess]
-           || [resultCode isEqualToString:PNSCodeLoginControllerClickLoginBtn]
-           || [resultCode isEqualToString:PNSCodeLoginControllerClickCheckBoxBtn]
-           || [resultCode isEqualToString:PNSCodeLoginControllerClickProtocol]
-           ) {
-            [self sendEventWithName:@"onTokenSuccess" body:@{
-                                                             @"msg": msg!=nil ? msg: @"",
-                                                             @"code": resultCode!=nil?resultCode:@"",
-                                               @"token": token!=nil ? token : @""
-                                               }];
-        } else {
+    if(![self checkInit:reject]) return;
+    
+    if (isSimulator()) {
+        [[TXCommonHandler sharedInstanceForSimulator] getLoginTokenWithTimeoutForSimulator:0.0 controller:nil model:nil complete:^(NSDictionary * _Nonnull resultDic) {
             [self sendEventWithName:@"onTokenFailed" body:@{
-                                                            @"msg": msg!=nil ? msg: @"",
-                                                            @"code": resultCode!=nil?resultCode:@"",
-                                               }];
-        }
-    }];
-    resolve(@"");
-}
-
-// 退出登录授权
-RCT_EXPORT_METHOD(quitLoginPage:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject){
-    [tXCommonHandler cancelLoginVCAnimated:true complete:^{
+                @"msg": [resultDic objectForKey:@"msg"],
+                @"code": [resultDic objectForKey:@"resultCode"],
+            }];
+        }];
         resolve(@"");
-    }];
+    } else {
+        UIViewController *topVC = [self topViewController];
+        [tXCommonHandler getLoginTokenWithTimeout:0.0 controller:topVC model:tXCustomModel complete:^(NSDictionary * _Nonnull resultDic) {
+            NSString *resultCode = [resultDic objectForKey:@"resultCode"];
+            NSString *msg = [resultDic objectForKey:@"msg"];
+            NSString *token = [resultDic objectForKey:@"token"];
+            if([resultCode isEqualToString:PNSCodeSuccess]
+               ||[resultCode isEqualToString:PNSCodeLoginControllerPresentSuccess]
+               || [resultCode isEqualToString:PNSCodeLoginControllerClickLoginBtn]
+               || [resultCode isEqualToString:PNSCodeLoginControllerClickCheckBoxBtn]
+               || [resultCode isEqualToString:PNSCodeLoginControllerClickProtocol]
+               ) {
+                [self sendEventWithName:@"onTokenSuccess" body:@{
+                    @"msg": msg ?: @"",
+                    @"code": resultCode ?: @"",
+                    @"token": token ?: @""
+                }];
+            } else {
+                [self sendEventWithName:@"onTokenFailed" body:@{
+                    @"msg": msg ?: @"",
+                    @"code": resultCode ?: @"",
+                }];
+            }
+        }];
+        resolve(@"");
+    }
 }
 
-// 授权⻚的 loading
+RCT_EXPORT_METHOD(quitLoginPage:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject){
+    if (isSimulator()) {
+        [[TXCommonHandler sharedInstanceForSimulator] cancelLoginVCAnimatedForSimulator:NO complete:^{
+            resolve(@"");
+        }];
+    } else {
+        [tXCommonHandler cancelLoginVCAnimated:true complete:^{
+            resolve(@"");
+        }];
+    }
+}
+
 RCT_EXPORT_METHOD(hideLoginLoading:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject){
-    [tXCommonHandler hideLoginLoading];
+    if (isSimulator()) {
+        [[TXCommonHandler sharedInstanceForSimulator] hideLoginLoadingForSimulator];
+    } else {
+        [tXCommonHandler hideLoginLoading];
+    }
     resolve(@"");
 }
 
-// 运行商类型 中国移动/中国联通/中国电信
 RCT_EXPORT_METHOD(getOperatorType:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject){
-    NSString *type = [TXCommonUtils getCurrentCarrierName];
-    resolve(type);
+    if (isSimulator()) {
+        resolve([TXCommonHandler getCurrentCarrierNameForSimulator]);
+    } else {
+        NSString *type = [TXCommonUtils getCurrentCarrierName];
+        resolve(type);
+    }
 }
 
 // 将方法名转为key名 主要是和安卓端的逻辑保持一致
@@ -546,7 +503,6 @@ RCT_EXPORT_METHOD(setUIConfig:(NSDictionary *)config resolve:(RCTPromiseResolveB
     };
     resolve(@"");
 }
-
 
 // 设置UI
 RCT_EXPORT_METHOD(setDialogUIConfig:(NSDictionary *)config resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject){

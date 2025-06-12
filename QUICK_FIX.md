@@ -312,77 +312,15 @@ GCC_PREPROCESSOR_DEFINITIONS[sdk=iphonesimulator*] = $(inherited) RN_ALI_ONEPASS
 3. `__has_include` - 头文件可用性检测
 4. 默认为真机模式（即使头文件不可用）
 
-### 真机构建失败问题 (xcodebuild exit code 65) 🔥
-
-如果在执行 `yarn ios --device` 时遇到构建失败，错误信息包含 `xcodebuild exited with error code '65'`：
-
-#### 🚀 快速修复
-
-1. **运行构建修复脚本**：
-```bash
-# 在项目根目录执行
-chmod +x ios/fix_device_build.sh
-./ios/fix_device_build.sh
-```
-
-2. **手动配置（如果脚本未完全解决问题）**：
-
-在Xcode中打开项目：
-```bash
-open ios/*.xcworkspace
-```
-
-在主项目的 `Build Settings` 中：
-
-- 搜索 `Preprocessor Macros`，添加：
-  ```
-  Debug[sdk=iphoneos*]: $(inherited) RN_ALI_ONEPASS_DEVICE_ENV=1
-  Release[sdk=iphoneos*]: $(inherited) RN_ALI_ONEPASS_DEVICE_ENV=1
-  ```
-
-- 搜索 `Excluded Architectures`，确保：
-  ```
-  EXCLUDED_ARCHS[sdk=iphonesimulator*] = arm64
-  ```
-
-3. **Podfile配置优化**：
-
-将 `ios/Podfile.device_fix` 中的配置添加到你的 `Podfile` 的 `post_install` 部分。
-
-4. **重新构建**：
-```bash
-cd ios
-rm -rf Pods Podfile.lock build
-pod install
-cd ..
-yarn ios --device 'felix'\''s iphone12'
-```
-
-#### 🔍 如果问题仍然存在
-
-尝试在Xcode中直接构建：
-1. 打开 `ios/*.xcworkspace`
-2. 选择你的真机设备
-3. 点击 `Product > Build` 
-4. 查看详细的错误信息
-
-常见解决方案：
-- 确保代码签名配置正确
-- 检查Provisioning Profile是否有效
-- 尝试禁用Bitcode: `ENABLE_BITCODE = NO`
-
 ## 🆘 需要帮助？
 
-如果问题仍然存在，请运行环境检测并提供输出信息：
+如果问题仍然存在，请运行调试脚本并提供输出信息：
 
 ```javascript
 // 在你的应用中运行
-import { NativeModules } from 'react-native';
-const { RNAliOnepass } = NativeModules;
-
-RNAliOnepass.getEnvironmentInfo()
-  .then(info => console.log('环境信息:', info))
-  .catch(error => console.error('检测失败:', error));
+import('./ios/debug_environment.js').then(module => {
+  module.debugEnvironment();
+});
 ```
 
 然后将控制台输出信息提供给技术支持。 

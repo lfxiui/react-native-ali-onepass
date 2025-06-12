@@ -8,63 +8,9 @@
 ❌ error 'ATAuthSDK/ATAuthSDK.h' file not found (真机构建时)
 [!] Target overrides the EXCLUDED_ARCHS build setting
 ❌ property 'numberColor' not found on object of type 'TXCustomModel *'
-❌ 真机环境调用checkEnvAvailable报错"模拟器环境不支持一键登录"
 ```
 
-## 🆕 最新问题：真机环境误判为模拟器（v3.5.5修复）
-
-### 问题症状
-在真机设备上调试时：
-- `OnePass.init(key)` 调用成功
-- `OnePass.checkEnvAvailable()` 返回错误："模拟器环境不支持一键登录"
-
-### 根本原因
-真机环境下阿里SDK头文件检测失败，导致系统误判为模拟器环境
-
-### 🚀 快速解决方案
-
-#### 方法1：自动诊断修复（推荐）
-```bash
-# 在项目根目录运行
-./node_modules/react-native-ali-onepass/fix_device_detection.sh
-```
-
-#### 方法2：手动修复
-```bash
-# 1. 更新到最新版本
-npm install react-native-ali-onepass@^3.5.5
-
-# 2. 清理重建
-cd ios
-rm -rf Pods Podfile.lock
-pod install --repo-update
-
-# 3. 在Xcode中Clean Build Folder
-```
-
-#### 方法3：检查Podfile配置
-确保你的 `ios/Podfile` 包含：
-```ruby
-post_install do |installer|
-  installer.pods_project.targets.each do |target|
-    target.build_configurations.each do |config|
-      # 模拟器环境
-      config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64'
-      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS[sdk=iphonesimulator*]'] = '$(inherited) RN_ALI_ONEPASS_SIMULATOR=1'
-      
-      # 真机环境 - 关键修复
-      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS[sdk=iphoneos*]'] = '$(inherited) RN_ALI_ONEPASS_DEVICE=1'
-    end
-  end
-end
-```
-
-### 验证修复结果
-在Xcode控制台查看日志，搜索 `[RNAliOnepass]`：
-- ✅ 真机环境应显示："使用真机模式"
-- ✅ 模拟器环境应显示："使用模拟器模式"
-
-## 🚀 完整解决方案（3.5.5版本）
+## 🚀 最终解决方案（3.5.4版本）
 
 ### ✨ 核心策略：完全分离
 - **模拟器环境**：完全不链接任何阿里SDK framework，使用纯模拟实现
@@ -74,9 +20,9 @@ end
 ### 步骤1：更新到最新版本
 
 ```bash
-npm install react-native-ali-onepass@^3.5.5
+npm install react-native-ali-onepass@^3.5.4
 # 或者
-yarn add react-native-ali-onepass@^3.5.5
+yarn add react-native-ali-onepass@^3.5.4
 ```
 
 ### 步骤2：修复主项目 Podfile
@@ -184,7 +130,7 @@ chmod +x fix_main_project.sh
 1. **版本确认**：
    ```bash
    npm list react-native-ali-onepass
-   # 应该显示 3.5.5 或更高版本
+   # 应该显示 3.5.4 或更高版本
    ```
 
 2. **Pod配置检查**：

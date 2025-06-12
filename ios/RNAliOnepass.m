@@ -1,7 +1,7 @@
 #import "RNAliOnepass.h"
 
 // 模拟器环境下的常量定义
-#ifdef RN_ALI_ONEPASS_USE_SIMULATOR_MODE
+#if TARGET_OS_SIMULATOR || defined(RN_ALI_ONEPASS_SIMULATOR) || defined(RN_ALI_ONEPASS_FALLBACK_SIMULATOR)
 // 模拟阿里SDK的常量和类型
 #define PNSCodeSuccess @"600000"
 #define PNSCodeLoginControllerPresentSuccess @"600001"
@@ -30,65 +30,41 @@ typedef NS_ENUM(NSUInteger, PNSAuthType) {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         instance = [[TXCommonHandler alloc] init];
-        // 添加环境检测日志
-        NSLog(@"[RNAliOnepass] 运行环境检测:");
-        NSLog(@"[RNAliOnepass] - TARGET_OS_SIMULATOR: %d", TARGET_OS_SIMULATOR);
-        #ifdef RN_ALI_ONEPASS_SIMULATOR
-        NSLog(@"[RNAliOnepass] - RN_ALI_ONEPASS_SIMULATOR: 已定义");
-        #endif
-        #ifdef RN_ALI_ONEPASS_DEVICE  
-        NSLog(@"[RNAliOnepass] - RN_ALI_ONEPASS_DEVICE: 已定义");
-        #endif
-        #ifdef RN_ALI_ONEPASS_FALLBACK_SIMULATOR
-        NSLog(@"[RNAliOnepass] - RN_ALI_ONEPASS_FALLBACK_SIMULATOR: 已定义 (头文件不可用)");
-        #endif
-        #ifdef RN_ALI_ONEPASS_USE_SIMULATOR_MODE
-        NSLog(@"[RNAliOnepass] - 使用模拟器模式");
-        #endif
-        #ifdef RN_ALI_ONEPASS_USE_DEVICE_MODE
-        NSLog(@"[RNAliOnepass] - 使用真机模式");
-        #endif
     });
     return instance;
 }
 
 - (void)setAuthSDKInfo:(NSString *)secretInfo complete:(void(^)(NSDictionary *resultDic))complete {
-    NSLog(@"[RNAliOnepass] 模拟器模式: setAuthSDKInfo 调用");
     if (complete) {
         complete(@{@"resultCode": PNSCodeSuccess, @"msg": @"模拟器环境初始化成功"});
     }
 }
 
 - (void)checkEnvAvailableWithAuthType:(PNSAuthType)authType complete:(void(^)(NSDictionary *resultDic))complete {
-    NSLog(@"[RNAliOnepass] 模拟器模式: checkEnvAvailable 调用");
     if (complete) {
         complete(@{@"resultCode": @"600024", @"msg": @"模拟器环境不支持一键登录"});
     }
 }
 
 - (void)accelerateLoginPageWithTimeout:(CGFloat)timeout complete:(void(^)(NSDictionary *resultDic))complete {
-    NSLog(@"[RNAliOnepass] 模拟器模式: accelerateLoginPage 调用");
     if (complete) {
         complete(@{@"resultCode": @"600024", @"msg": @"模拟器环境不支持预取号"});
     }
 }
 
 - (void)getLoginTokenWithTimeout:(CGFloat)timeout controller:(UIViewController *)controller model:(id)model complete:(void(^)(NSDictionary *resultDic))complete {
-    NSLog(@"[RNAliOnepass] 模拟器模式: getLoginToken 调用");
     if (complete) {
         complete(@{@"resultCode": @"600024", @"msg": @"模拟器环境不支持一键登录", @"token": @""});
     }
 }
 
 - (void)cancelLoginVCAnimated:(BOOL)animated complete:(void(^)(void))complete {
-    NSLog(@"[RNAliOnepass] 模拟器模式: cancelLoginVC 调用");
     if (complete) {
         complete();
     }
 }
 
 - (void)hideLoginLoading {
-    NSLog(@"[RNAliOnepass] 模拟器模式: hideLoginLoading 调用");
     // 空实现
 }
 @end

@@ -10,19 +10,19 @@
 ❌ property 'numberColor' not found on object of type 'TXCustomModel *'
 ```
 
-## 🚀 最新解决方案（3.5.3版本）
+## 🚀 最终解决方案（3.5.4版本）
 
-### ✨ 核心改进
-- **智能头文件检测**：自动检测阿里SDK头文件是否存在
-- **回退机制**：如果头文件不存在，自动使用模拟模式
-- **完善的路径配置**：确保framework和头文件路径正确
+### ✨ 核心策略：完全分离
+- **模拟器环境**：完全不链接任何阿里SDK framework，使用纯模拟实现
+- **真机环境**：正常链接所有framework，提供完整功能
+- **智能回退**：如果SDK不可用，自动使用模拟模式
 
 ### 步骤1：更新到最新版本
 
 ```bash
-npm install react-native-ali-onepass@^3.5.3
+npm install react-native-ali-onepass@^3.5.4
 # 或者
-yarn add react-native-ali-onepass@^3.5.3
+yarn add react-native-ali-onepass@^3.5.4
 ```
 
 ### 步骤2：修复主项目 Podfile
@@ -36,12 +36,6 @@ post_install do |installer|
       # 关键修复：使用继承而不是覆盖
       config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = '$(inherited) arm64'
       config.build_settings['ONLY_ACTIVE_ARCH'] = 'YES'
-      
-      # 确保framework搜索路径正确
-      if target.name == 'RNAliOnepass'
-        config.build_settings['FRAMEWORK_SEARCH_PATHS'] ||= []
-        config.build_settings['FRAMEWORK_SEARCH_PATHS'] << '$(PODS_TARGET_SRCROOT)/ios/libs/**'
-      end
     end
   end
   
@@ -59,7 +53,7 @@ cd ios
 rm -rf Pods/ Podfile.lock
 rm -rf ~/Library/Developer/Xcode/DerivedData
 
-# 重新安装（应用新的配置）
+# 重新安装（应用新的分离策略）
 pod install
 
 # 在 Xcode 中：Product -> Clean Build Folder (Cmd+Shift+K)
@@ -70,41 +64,47 @@ pod install
 现在尝试构建：
 
 ```bash
-# 模拟器构建
+# 模拟器构建（应该完全没有阿里SDK链接）
 npx react-native run-ios
 
-# 真机构建
+# 真机构建（应该正常链接阿里SDK）
 npx react-native run-ios --device "your-device-name"
 ```
 
 ## 🔍 技术原理
 
-### 新版本的智能检测
+### 最新版本的完全分离策略
 
-1. **头文件存在检测**：
-   ```objc
-   #if __has_include(<ATAuthSDK/ATAuthSDK.h>)
-   #import <ATAuthSDK/ATAuthSDK.h>
-   #else
-   // 自动回退到模拟模式
-   #define RN_ALI_ONEPASS_FALLBACK_SIMULATOR 1
-   #endif
+1. **保留但不自动链接**：
+   ```ruby
+   # 只保留文件，不自动链接
+   s.preserve_paths = 'ios/libs/**/*.framework'
    ```
 
-2. **多重环境检测**：
+2. **条件性Framework配置**：
+   ```ruby
+   # 模拟器：完全清空framework设置
+   'FRAMEWORK_SEARCH_PATHS[sdk=iphonesimulator*]' => '$(inherited)',
+   'OTHER_LDFLAGS[sdk=iphonesimulator*]' => '$(inherited)',
+   
+   # 真机：正常链接framework
+   'FRAMEWORK_SEARCH_PATHS[sdk=iphoneos*]' => '...阿里SDK路径...',
+   'OTHER_LDFLAGS[sdk=iphoneos*]' => '-framework ATAuthSDK ...',
+   ```
+
+3. **多重环境检测**：
    ```objc
    #if TARGET_OS_SIMULATOR || defined(RN_ALI_ONEPASS_SIMULATOR) || defined(RN_ALI_ONEPASS_FALLBACK_SIMULATOR)
-   // 使用模拟实现
+   // 完全使用模拟实现，无任何SDK依赖
+   #else
+   // 正常SDK功能
    #endif
    ```
-
-3. **完善的路径配置**：
-   - Framework搜索路径：`$(PODS_TARGET_SRCROOT)/ios/libs/**`
-   - 头文件搜索路径：自动包含所有framework的Headers目录
 
 ### 预期行为
 
 - **模拟器环境**：
+  - ✅ 完全无阿里SDK依赖
   - ✅ 正常编译和运行
   - ✅ 使用模拟SDK实现
   - ✅ 返回模拟错误代码（正常行为）
@@ -130,39 +130,56 @@ chmod +x fix_main_project.sh
 1. **版本确认**：
    ```bash
    npm list react-native-ali-onepass
-   # 应该显示 3.5.3 或更高版本
+   # 应该显示 3.5.4 或更高版本
    ```
 
-2. **Framework文件检查**：
-   ```bash
-   ls -la node_modules/react-native-ali-onepass/ios/libs/
-   # 应该看到三个 .framework 目录
-   ```
-
-3. **Pod配置检查**：
+2. **Pod配置检查**：
    ```bash
    cat ios/Pods/Target\ Support\ Files/RNAliOnepass/RNAliOnepass.debug.xcconfig
-   # 查看生成的配置是否正确
+   # 查看模拟器环境下是否没有阿里SDK链接
+   ```
+
+3. **构建配置验证**：
+   ```bash
+   # 在Xcode中查看RNAliOnepass target的Build Settings
+   # 模拟器应该没有ATAuthSDK相关的FRAMEWORK_SEARCH_PATHS
    ```
 
 ### 常见问题解决
 
-**Q: 真机构建时还是找不到头文件？**
+**Q: 模拟器还是出现架构链接错误？**
 
-A: 确保framework文件完整，尝试重新下载依赖：
+A: 确保完全清理了缓存，并检查主项目的Build Settings：
 ```bash
-rm -rf node_modules
-npm install
-cd ios && pod install
+rm -rf ~/Library/Developer/Xcode/DerivedData
+cd ios && rm -rf Pods/ Podfile.lock && pod install
 ```
 
-**Q: 模拟器构建时链接错误？**
+**Q: 真机构建时找不到头文件？**
 
-A: 检查主项目的Build Settings中是否正确设置了 `$(inherited) arm64`
+A: 新版本会自动处理这个问题，如果仍有问题，检查framework文件是否完整
 
 **Q: 两个环境都无法构建？**
 
-A: 使用自动诊断脚本，或者手动检查Podfile配置
+A: 使用自动诊断脚本，或者检查是否有其他依赖冲突
+
+### 最终验证步骤
+
+构建成功后，你应该看到：
+
+1. **模拟器构建日志**：
+   ```
+   🔧 模拟器环境：移除阿里SDK framework链接
+   ```
+
+2. **真机构建日志**：
+   ```
+   📱 真机环境：配置阿里SDK framework链接
+   ```
+
+3. **运行时行为**：
+   - 模拟器：调用一键登录返回模拟错误码
+   - 真机：正常的一键登录流程
 
 ## 📚 更多帮助
 

@@ -13,23 +13,8 @@ Pod::Spec.new do |s|
   s.ios.deployment_target = '9.0'
   s.requires_arc = true
   
-  # 只保留framework文件，但不自动链接（通过脚本控制）
+  # 只保留framework文件，但不自动链接
   s.preserve_paths = 'ios/libs/**/*.framework', 'ios/libs/**/*.bundle'
-  
-  # 添加脚本阶段来根据环境动态配置
-  s.script_phase = {
-    :name => 'Dynamic Framework Configuration',
-    :script => <<-SCRIPT
-      if [[ "$EFFECTIVE_PLATFORM_NAME" == "-iphonesimulator" ]]; then
-        echo "🔧 模拟器环境：移除阿里SDK framework链接"
-        # 确保模拟器不链接任何阿里SDK
-      else
-        echo "📱 真机环境：配置阿里SDK framework链接"
-        # 真机环境下正常链接
-      fi
-    SCRIPT,
-    :execution_position => :before_compile
-  }
   
   # 配置构建设置 - 关键是条件性地包含framework
   s.pod_target_xcconfig = {

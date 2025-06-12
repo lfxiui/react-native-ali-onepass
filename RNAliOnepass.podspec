@@ -10,34 +10,34 @@ Pod::Spec.new do |s|
   s.source       = { :git => "https://github.com/yoonzm/react-native-ali-onepass.git", :tag => "master" }
   s.source_files  = "ios/*.{h,m}"
   
-  # 保留所有framework文件，但不自动链接
-  s.preserve_paths = 'ios/libs/**/*.framework', 'ios/libs/**/*.bundle'
+  s.ios.deployment_target = '9.0'
+  s.requires_arc = true
   
-  # 通过配置决定何时链接framework
+  # 包含framework文件和资源
+  s.vendored_frameworks = 'ios/libs/**/*.framework'
+  s.resources = 'ios/libs/ATAuthSDK.framework/ATAuthSDK.bundle'
+  
+  # 确保framework头文件路径正确
+  s.xcconfig = {
+    'FRAMEWORK_SEARCH_PATHS' => '$(inherited) $(PODS_TARGET_SRCROOT)/ios/libs/ATAuthSDK.framework $(PODS_TARGET_SRCROOT)/ios/libs/YTXMonitor.framework $(PODS_TARGET_SRCROOT)/ios/libs/YTXOperators.framework',
+    'HEADER_SEARCH_PATHS' => '$(inherited) $(PODS_TARGET_SRCROOT)/ios/libs/ATAuthSDK.framework/Headers $(PODS_TARGET_SRCROOT)/ios/libs/YTXMonitor.framework/Headers $(PODS_TARGET_SRCROOT)/ios/libs/YTXOperators.framework/Headers'
+  }
+  
+  # 配置构建设置
   s.pod_target_xcconfig = {
-    # 模拟器环境配置
+    # 模拟器环境：排除arm64架构
     'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64',
-    'VALID_ARCHS[sdk=iphonesimulator*]' => 'x86_64',
     
-    # 只在真机环境下链接阿里SDK的framework
-    'FRAMEWORK_SEARCH_PATHS[sdk=iphoneos*]' => '$(inherited) $(PODS_TARGET_SRCROOT)/ios/libs/ATAuthSDK.framework $(PODS_TARGET_SRCROOT)/ios/libs/YTXMonitor.framework $(PODS_TARGET_SRCROOT)/ios/libs/YTXOperators.framework',
-    'OTHER_LDFLAGS[sdk=iphoneos*]' => '$(inherited) -framework ATAuthSDK -framework YTXMonitor -framework YTXOperators',
-    
-    # 模拟器环境下不链接阿里SDK
-    'FRAMEWORK_SEARCH_PATHS[sdk=iphonesimulator*]' => '$(inherited)',
-    'OTHER_LDFLAGS[sdk=iphonesimulator*]' => '$(inherited)',
-    
-    # 预处理器定义，帮助代码识别环境
+    # 预处理器定义
     'GCC_PREPROCESSOR_DEFINITIONS[sdk=iphoneos*]' => '$(inherited) RN_ALI_ONEPASS_DEVICE=1',
     'GCC_PREPROCESSOR_DEFINITIONS[sdk=iphonesimulator*]' => '$(inherited) RN_ALI_ONEPASS_SIMULATOR=1'
   }
   
-  # 条件性资源配置
-  s.ios.resource_bundles = {
-    'RNAliOnepass' => ['ios/libs/ATAuthSDK.framework/ATAuthSDK.bundle/*']
+  # 用户目标配置
+  s.user_target_xcconfig = {
+    'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => '$(inherited) arm64'
   }
 
-  s.requires_arc = true
   s.dependency "React"
   #s.dependency "others"
 

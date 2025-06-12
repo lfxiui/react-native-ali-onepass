@@ -1,7 +1,7 @@
 #import "RNAliOnepass.h"
 
-// 只有在明确的模拟器环境下才使用模拟代码
-#ifdef RN_ALI_ONEPASS_SIMULATOR_ENV
+// 模拟器环境下的常量定义
+#if TARGET_OS_SIMULATOR || defined(RN_ALI_ONEPASS_SIMULATOR) || defined(RN_ALI_ONEPASS_FALLBACK_SIMULATOR)
 // 模拟阿里SDK的常量和类型
 #define PNSCodeSuccess @"600000"
 #define PNSCodeLoginControllerPresentSuccess @"600001"
@@ -164,45 +164,6 @@ typedef NS_ENUM(NSUInteger, PNSAuthType) {
     return dispatch_get_main_queue();
 }
 RCT_EXPORT_MODULE()
-
-// 运行时检测是否为模拟器环境
-- (BOOL)isSimulatorEnvironment {
-#ifdef RN_ALI_ONEPASS_SIMULATOR_ENV
-    return YES;
-#else
-    return NO;
-#endif
-}
-
-// 调试方法：检查当前环境状态
-RCT_EXPORT_METHOD(getEnvironmentInfo:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject) {
-    NSMutableDictionary *info = [NSMutableDictionary dictionary];
-    
-#ifdef RN_ALI_ONEPASS_SIMULATOR_ENV
-    [info setObject:@"simulator" forKey:@"detectedEnvironment"];
-    [info setObject:@"使用模拟器模式" forKey:@"mode"];
-#elif defined(RN_ALI_ONEPASS_DEVICE_ENV)
-    [info setObject:@"device" forKey:@"detectedEnvironment"];
-    [info setObject:@"使用真机模式" forKey:@"mode"];
-#else
-    [info setObject:@"unknown" forKey:@"detectedEnvironment"];
-    [info setObject:@"未知环境" forKey:@"mode"];
-#endif
-
-#if TARGET_OS_SIMULATOR
-    [info setObject:@YES forKey:@"TARGET_OS_SIMULATOR"];
-#else
-    [info setObject:@NO forKey:@"TARGET_OS_SIMULATOR"];
-#endif
-
-#if __has_include(<ATAuthSDK/ATAuthSDK.h>)
-    [info setObject:@YES forKey:@"hasATAuthSDKHeaders"];
-#else
-    [info setObject:@NO forKey:@"hasATAuthSDKHeaders"];
-#endif
-    
-    resolve(info);
-}
 
 RCT_EXPORT_METHOD(init:(NSString *)secretInfo resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject) {
     tXCommonHandler = [TXCommonHandler sharedInstance];

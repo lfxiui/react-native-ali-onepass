@@ -181,4 +181,208 @@ A: 使用自动诊断脚本，或者检查是否有其他依赖冲突
 
 - [详细修复指南](./iOS_SIMULATOR_FIX.md)
 - [完整变更日志](./CHANGELOG.md)
-- [GitHub Issues](https://github.com/yoonzm/react-native-ali-onepass/issues) 
+- [GitHub Issues](https://github.com/yoonzm/react-native-ali-onepass/issues)
+
+## 🚀 快速解决方案
+
+### 版本 3.5.4 重要更新 ⭐
+
+**完全分离解决方案**: 现已实现模拟器和真机环境的完全分离，修复了所有已知兼容性问题。
+
+### 问题描述
+如果你在iOS项目中遇到以下错误：
+```
+ld: building for 'iOS-simulator', but linking in object file built for 'iOS'
+```
+
+### ⚡ 最简单的解决方法
+
+1. **更新到最新版本**：
+```bash
+npm install react-native-ali-onepass@latest
+cd ios && pod install
+```
+
+2. **清理并重新构建**：
+```bash
+cd ios
+rm -rf Pods Podfile.lock
+pod install
+cd ..
+npx react-native run-ios
+```
+
+## 🔧 故障排除
+
+### 真机调试问题 (新增) 
+
+如果在没有插入SIM卡的iPhone真机上调用 `checkEnvAvailable()` 时出现 **"模拟器环境不支持一键登录"** 错误：
+
+#### 1. 首先检查环境检测状态
+
+在你的React Native代码中添加以下调试代码：
+
+```javascript
+import { NativeModules } from 'react-native';
+const { RNAliOnepass } = NativeModules;
+
+// 检查环境检测状态
+const checkEnvironment = async () => {
+  try {
+    const info = await RNAliOnepass.getEnvironmentInfo();
+    console.log('环境检测信息:', info);
+    
+    if (info.detectedEnvironment === 'simulator' && info.TARGET_OS_SIMULATOR === false) {
+      console.warn('检测到问题：真机被误识别为模拟器环境');
+    }
+  } catch (error) {
+    console.error('获取环境信息失败:', error);
+  }
+};
+
+checkEnvironment();
+```
+
+#### 2. 如果确认环境检测有误，执行以下步骤：
+
+```bash
+# 1. 清理项目
+cd ios
+rm -rf Pods Podfile.lock build DerivedData
+xcodebuild clean
+
+# 2. 重新安装依赖
+pod deintegrate
+pod install
+
+# 3. 在Xcode中手动清理
+# Product > Clean Build Folder
+# 然后重新构建项目
+```
+
+#### 3. 手动修复（如果问题仍然存在）
+
+在主项目的 `Build Settings` 中确认以下配置：
+
+```
+// 只针对真机的预处理器定义
+GCC_PREPROCESSOR_DEFINITIONS[sdk=iphoneos*] = $(inherited) RN_ALI_ONEPASS_DEVICE=1
+
+// 确保模拟器配置正确
+GCC_PREPROCESSOR_DEFINITIONS[sdk=iphonesimulator*] = $(inherited) RN_ALI_ONEPASS_SIMULATOR=1
+```
+
+### 关于无SIM卡的说明
+
+**重要**: 即使在没有SIM卡的真机上，也应该调用真正的阿里SDK，而不是模拟器版本。阿里SDK会正确处理无SIM卡的情况并返回相应的错误码，这是正常的业务逻辑。
+
+- ✅ **正确行为**: 真机环境调用真正的SDK，返回真实的错误信息（如 "无SIM卡" 或相关错误码）
+- ❌ **错误行为**: 真机环境被误判为模拟器，返回 "模拟器环境不支持一键登录"
+
+## 📋 版本历史
+
+### 版本 3.5.4 - 完全分离解决方案 ⭐
+- **环境检测优化**: 改进了环境检测逻辑，防止真机被误识别为模拟器
+- **调试功能**: 新增 `getEnvironmentInfo()` 方法，帮助诊断环境检测问题  
+- **构建配置优化**: 使用 `preserve_paths` 替代 `vendored_frameworks`
+- **完全分离**: 模拟器环境完全不链接阿里SDK，真机环境正常使用
+
+### 版本 3.5.3 - 智能检测
+- **头文件检测**: 使用 `__has_include` 检测SDK可用性
+- **自动降级**: 真机环境下SDK不可用时的优雅处理
+- **修复设备构建**: 解决真机构建时的头文件路径问题
+
+### 版本 3.5.2 - 编译修复  
+- **属性补全**: 添加缺失的TXCustomModel属性
+- **编译错误**: 修复 "property not found" 错误
+
+### 版本 3.5.1 - CocoaPods优化
+- **配置冲突**: 移除导致警告的配置项
+- **链接修复**: 解决 "library not found" 错误  
+
+### 版本 3.5.0 - 初始模拟器支持
+- **条件编译**: 基于 `TARGET_OS_SIMULATOR` 的条件编译
+- **Mock实现**: 完整的模拟器环境API实现
+
+## 💡 技术细节
+
+新的环境检测逻辑优先级：
+1. `TARGET_OS_SIMULATOR` - 编译时检测
+2. `RN_ALI_ONEPASS_SIMULATOR` - 手动强制模拟模式
+3. `__has_include` - 头文件可用性检测
+4. 默认为真机模式（即使头文件不可用）
+
+### 真机构建失败问题 (xcodebuild exit code 65) 🔥
+
+如果在执行 `yarn ios --device` 时遇到构建失败，错误信息包含 `xcodebuild exited with error code '65'`：
+
+#### 🚀 快速修复
+
+1. **运行构建修复脚本**：
+```bash
+# 在项目根目录执行
+chmod +x ios/fix_device_build.sh
+./ios/fix_device_build.sh
+```
+
+2. **手动配置（如果脚本未完全解决问题）**：
+
+在Xcode中打开项目：
+```bash
+open ios/*.xcworkspace
+```
+
+在主项目的 `Build Settings` 中：
+
+- 搜索 `Preprocessor Macros`，添加：
+  ```
+  Debug[sdk=iphoneos*]: $(inherited) RN_ALI_ONEPASS_DEVICE_ENV=1
+  Release[sdk=iphoneos*]: $(inherited) RN_ALI_ONEPASS_DEVICE_ENV=1
+  ```
+
+- 搜索 `Excluded Architectures`，确保：
+  ```
+  EXCLUDED_ARCHS[sdk=iphonesimulator*] = arm64
+  ```
+
+3. **Podfile配置优化**：
+
+将 `ios/Podfile.device_fix` 中的配置添加到你的 `Podfile` 的 `post_install` 部分。
+
+4. **重新构建**：
+```bash
+cd ios
+rm -rf Pods Podfile.lock build
+pod install
+cd ..
+yarn ios --device 'felix'\''s iphone12'
+```
+
+#### 🔍 如果问题仍然存在
+
+尝试在Xcode中直接构建：
+1. 打开 `ios/*.xcworkspace`
+2. 选择你的真机设备
+3. 点击 `Product > Build` 
+4. 查看详细的错误信息
+
+常见解决方案：
+- 确保代码签名配置正确
+- 检查Provisioning Profile是否有效
+- 尝试禁用Bitcode: `ENABLE_BITCODE = NO`
+
+## 🆘 需要帮助？
+
+如果问题仍然存在，请运行环境检测并提供输出信息：
+
+```javascript
+// 在你的应用中运行
+import { NativeModules } from 'react-native';
+const { RNAliOnepass } = NativeModules;
+
+RNAliOnepass.getEnvironmentInfo()
+  .then(info => console.log('环境信息:', info))
+  .catch(error => console.error('检测失败:', error));
+```
+
+然后将控制台输出信息提供给技术支持。 

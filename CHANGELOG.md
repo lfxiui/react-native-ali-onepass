@@ -1,5 +1,29 @@
 # 变更日志
 
+## [3.5.5] - 2024-12-19
+
+### 🐛 关键Bug修复
+- **修复真机环境条件编译问题**: 解决了真机环境下错误使用模拟器代码的问题
+- **精确环境检测**: 使用 `RN_ALI_ONEPASS_DEVICE` 宏准确识别真机环境
+- **SDK可用性检测**: 真机环境下通过 `__has_include(<ATAuthSDK/ATAuthSDK.h>)` 确保SDK可用
+
+### 🔧 技术改进
+- **三层条件编译逻辑**:
+  1. 模拟器环境：`TARGET_OS_SIMULATOR || defined(RN_ALI_ONEPASS_SIMULATOR)`
+  2. 真机环境：`defined(RN_ALI_ONEPASS_DEVICE) && __has_include(<ATAuthSDK/ATAuthSDK.h>)`
+  3. 回退模式：SDK不可用时的安全实现
+- **增强错误提示**: 区分不同环境的错误信息，便于调试
+
+### 🛠️ 新增工具
+- 添加真机调试脚本 `ios/debug_device_build.sh`
+- 提供完整的环境检测和诊断功能
+
+### 📋 修复步骤
+1. 进入主项目: `cd [你的项目目录]`
+2. 重新安装Pods: `cd ios && pod install --repo-update`
+3. 清理缓存: `rm -rf ~/Library/Developer/Xcode/DerivedData`
+4. 重新构建真机
+
 ## [3.5.1] - 2024-12-19
 
 ### 🔧 修复

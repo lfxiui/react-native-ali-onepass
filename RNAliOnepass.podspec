@@ -26,19 +26,19 @@ Pod::Spec.new do |s|
     'FRAMEWORK_SEARCH_PATHS[sdk=iphonesimulator*]' => '$(inherited)',
     'OTHER_LDFLAGS[sdk=iphonesimulator*]' => '$(inherited)',
     
-    # 真机环境：正常配置framework
-    'FRAMEWORK_SEARCH_PATHS[sdk=iphoneos*]' => '$(inherited) $(PODS_TARGET_SRCROOT)/ios/libs/ATAuthSDK.framework $(PODS_TARGET_SRCROOT)/ios/libs/YTXMonitor.framework $(PODS_TARGET_SRCROOT)/ios/libs/YTXOperators.framework',
+    # 真机环境：正常配置framework - 修复路径问题
+    'FRAMEWORK_SEARCH_PATHS[sdk=iphoneos*]' => '$(inherited) "$(PODS_TARGET_SRCROOT)/ios/libs"',
     'OTHER_LDFLAGS[sdk=iphoneos*]' => '$(inherited) -framework ATAuthSDK -framework YTXMonitor -framework YTXOperators',
-    'HEADER_SEARCH_PATHS[sdk=iphoneos*]' => '$(inherited) $(PODS_TARGET_SRCROOT)/ios/libs/ATAuthSDK.framework/Headers $(PODS_TARGET_SRCROOT)/ios/libs/YTXMonitor.framework/Headers $(PODS_TARGET_SRCROOT)/ios/libs/YTXOperators.framework/Headers',
+    'HEADER_SEARCH_PATHS[sdk=iphoneos*]' => '$(inherited) "$(PODS_TARGET_SRCROOT)/ios/libs/ATAuthSDK.framework/Headers" "$(PODS_TARGET_SRCROOT)/ios/libs/YTXMonitor.framework/Headers" "$(PODS_TARGET_SRCROOT)/ios/libs/YTXOperators.framework/Headers"',
     
-    # 预处理器定义
-    'GCC_PREPROCESSOR_DEFINITIONS[sdk=iphoneos*]' => '$(inherited) RN_ALI_ONEPASS_DEVICE=1',
-    'GCC_PREPROCESSOR_DEFINITIONS[sdk=iphonesimulator*]' => '$(inherited) RN_ALI_ONEPASS_SIMULATOR=1'
+    # 预处理器定义 - 添加引号以确保正确处理
+    'GCC_PREPROCESSOR_DEFINITIONS[sdk=iphoneos*]' => '$(inherited) RN_ALI_ONEPASS_DEVICE_ENV=1',
+    'GCC_PREPROCESSOR_DEFINITIONS[sdk=iphonesimulator*]' => '$(inherited) RN_ALI_ONEPASS_SIMULATOR_ENV=1'
   }
   
-  # 用户目标配置
+  # 用户目标配置 - 简化以避免冲突
   s.user_target_xcconfig = {
-    'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => '$(inherited) arm64'
+    'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64'
   }
 
   s.dependency "React"

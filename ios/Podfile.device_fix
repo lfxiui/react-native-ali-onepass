@@ -1,0 +1,68 @@
+# iOS真机构建优化配置
+# 请将以下配置添加到你的主项目 Podfile 中
+
+platform :ios, '11.0'
+require_relative '../node_modules/react-native/scripts/react_native_pods'
+require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
+
+target 'YourAppName' do
+  config = use_native_modules!
+  
+  # React Native pods
+  use_react_native!(
+    :path => config[:reactNativePath],
+    # 其他配置...
+  )
+  
+  # 其他依赖...
+end
+
+# 关键：真机构建优化配置
+post_install do |installer|
+  react_native_post_install(installer)
+  
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      # 修复模拟器架构问题
+      config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64'
+      
+      # 确保正确的部署目标
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '11.0'
+      
+      # 修复真机构建的警告和错误
+      config.build_settings['ONLY_ACTIVE_ARCH'] = 'NO'
+      config.build_settings['VALID_ARCHS'] = 'arm64 arm64e'
+      config.build_settings['VALID_ARCHS[sdk=iphonesimulator*]'] = 'x86_64 arm64'
+      
+      # 禁用Bitcode（可选，某些情况下有助于解决构建问题）
+      config.build_settings['ENABLE_BITCODE'] = 'NO'
+      
+      # 修复Code Signing问题
+      config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO' if target.name.include?('Pods-')
+      
+      # RNAliOnepass特定配置
+      if target.name == 'RNAliOnepass'
+        # 确保预处理器定义正确设置
+        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= []
+        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'RN_ALI_ONEPASS_DEVICE_ENV=1' if config.name.downcase.include?('release') || config.name.downcase.include?('debug')
+      end
+    end
+  end
+  
+  # 针对RNAliOnepass的特殊配置
+  installer.pods_project.targets.each do |target|
+    if target.name == 'RNAliOnepass'
+      target.build_configurations.each do |config|
+        # 确保Framework路径正确
+        config.build_settings['FRAMEWORK_SEARCH_PATHS'] ||= []
+        config.build_settings['FRAMEWORK_SEARCH_PATHS'] << '"$(PODS_TARGET_SRCROOT)/ios/libs"'
+        
+        # 确保Header路径正确
+        config.build_settings['HEADER_SEARCH_PATHS'] ||= []
+        config.build_settings['HEADER_SEARCH_PATHS'] << '"$(PODS_TARGET_SRCROOT)/ios/libs/ATAuthSDK.framework/Headers"'
+        config.build_settings['HEADER_SEARCH_PATHS'] << '"$(PODS_TARGET_SRCROOT)/ios/libs/YTXMonitor.framework/Headers"'
+        config.build_settings['HEADER_SEARCH_PATHS'] << '"$(PODS_TARGET_SRCROOT)/ios/libs/YTXOperators.framework/Headers"'
+      end
+    end
+  end
+end 

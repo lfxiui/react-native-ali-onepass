@@ -1,7 +1,7 @@
 #import "RNAliOnepass.h"
 
 // 只有在明确的模拟器环境下才使用模拟代码
-#ifdef RN_ALI_ONEPASS_SIMULATOR_ENV
+#if TARGET_OS_SIMULATOR
 // 模拟阿里SDK的常量和类型
 #define PNSCodeSuccess @"600000"
 #define PNSCodeLoginControllerPresentSuccess @"600001"

@@ -1,5 +1,9 @@
 #import "RNAliOnepass.h"
 
+#if !TARGET_OS_SIMULATOR
+#import <ATAuthSDK/ATAuthSDK.h>
+#endif
+
 // 模拟器环境下的常量定义
 #if TARGET_OS_SIMULATOR || defined(RN_ALI_ONEPASS_SIMULATOR) || defined(RN_ALI_ONEPASS_FALLBACK_SIMULATOR)
 // 模拟阿里SDK的常量和类型

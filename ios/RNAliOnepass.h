@@ -32,6 +32,8 @@
 #endif
 #endif
 
+@class TXCustomModel;
+
 @interface RNAliOnepass : RCTEventEmitter <RCTBridgeModule>
 
 @end

@@ -1,8 +1,7 @@
 #import "RNAliOnepass.h"
 
-// 检查运行环境并选择相应的SDK实现
-#if TARGET_OS_SIMULATOR || defined(RN_ALI_ONEPASS_SIMULATOR)
-// 模拟器环境：使用模拟实现
+// 模拟器环境下的常量定义
+#if TARGET_OS_SIMULATOR || defined(RN_ALI_ONEPASS_FALLBACK_SIMULATOR)
 // 模拟阿里SDK的常量和类型
 #define PNSCodeSuccess @"600000"
 #define PNSCodeLoginControllerPresentSuccess @"600001"
@@ -31,41 +30,55 @@ typedef NS_ENUM(NSUInteger, PNSAuthType) {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         instance = [[TXCommonHandler alloc] init];
+        // 添加环境检测日志
+        NSLog(@"[RNAliOnepass] 运行环境检测:");
+        NSLog(@"[RNAliOnepass] - TARGET_OS_SIMULATOR: %d", TARGET_OS_SIMULATOR);
+        #ifdef RN_ALI_ONEPASS_FALLBACK_SIMULATOR
+        NSLog(@"[RNAliOnepass] - 使用模拟器模式 (头文件不可用回退)");
+        #else
+        NSLog(@"[RNAliOnepass] - 使用模拟器模式");
+        #endif
     });
     return instance;
 }
 
 - (void)setAuthSDKInfo:(NSString *)secretInfo complete:(void(^)(NSDictionary *resultDic))complete {
+    NSLog(@"[RNAliOnepass] 模拟器模式: setAuthSDKInfo 调用");
     if (complete) {
         complete(@{@"resultCode": PNSCodeSuccess, @"msg": @"模拟器环境初始化成功"});
     }
 }
 
 - (void)checkEnvAvailableWithAuthType:(PNSAuthType)authType complete:(void(^)(NSDictionary *resultDic))complete {
+    NSLog(@"[RNAliOnepass] 模拟器模式: checkEnvAvailable 调用");
     if (complete) {
         complete(@{@"resultCode": @"600024", @"msg": @"模拟器环境不支持一键登录"});
     }
 }
 
 - (void)accelerateLoginPageWithTimeout:(CGFloat)timeout complete:(void(^)(NSDictionary *resultDic))complete {
+    NSLog(@"[RNAliOnepass] 模拟器模式: accelerateLoginPage 调用");
     if (complete) {
         complete(@{@"resultCode": @"600024", @"msg": @"模拟器环境不支持预取号"});
     }
 }
 
 - (void)getLoginTokenWithTimeout:(CGFloat)timeout controller:(UIViewController *)controller model:(id)model complete:(void(^)(NSDictionary *resultDic))complete {
+    NSLog(@"[RNAliOnepass] 模拟器模式: getLoginToken 调用");
     if (complete) {
         complete(@{@"resultCode": @"600024", @"msg": @"模拟器环境不支持一键登录", @"token": @""});
     }
 }
 
 - (void)cancelLoginVCAnimated:(BOOL)animated complete:(void(^)(void))complete {
+    NSLog(@"[RNAliOnepass] 模拟器模式: cancelLoginVC 调用");
     if (complete) {
         complete();
     }
 }
 
 - (void)hideLoginLoading {
+    NSLog(@"[RNAliOnepass] 模拟器模式: hideLoginLoading 调用");
     // 空实现
 }
 @end
@@ -134,143 +147,6 @@ typedef NS_ENUM(NSUInteger, PNSAuthType) {
 @implementation TXCommonUtils
 + (NSString *)getCurrentCarrierName {
     return @"模拟器";
-}
-@end
-
-#elif defined(RN_ALI_ONEPASS_DEVICE) && __has_include(<ATAuthSDK/ATAuthSDK.h>)
-// 真机环境且SDK可用：使用真实的阿里SDK
-#import <ATAuthSDK/ATAuthSDK.h>
-#import <ATAuthSDK/PNSReturnCode.h>
-
-#else
-// 回退模式：SDK不可用时使用模拟实现
-// 模拟阿里SDK的常量和类型
-#define PNSCodeSuccess @"600000"
-#define PNSCodeLoginControllerPresentSuccess @"600001"
-#define PNSCodeLoginControllerClickLoginBtn @"600002"
-#define PNSCodeLoginControllerClickCheckBoxBtn @"600003"
-#define PNSCodeLoginControllerClickProtocol @"600004"
-
-typedef NS_ENUM(NSUInteger, PNSAuthType) {
-    PNSAuthTypeLoginToken = 1
-};
-
-// 模拟TXCommonHandler类
-@interface TXCommonHandler : NSObject
-+ (instancetype)sharedInstance;
-- (void)setAuthSDKInfo:(NSString *)secretInfo complete:(void(^)(NSDictionary *resultDic))complete;
-- (void)checkEnvAvailableWithAuthType:(PNSAuthType)authType complete:(void(^)(NSDictionary *resultDic))complete;
-- (void)accelerateLoginPageWithTimeout:(CGFloat)timeout complete:(void(^)(NSDictionary *resultDic))complete;
-- (void)getLoginTokenWithTimeout:(CGFloat)timeout controller:(UIViewController *)controller model:(id)model complete:(void(^)(NSDictionary *resultDic))complete;
-- (void)cancelLoginVCAnimated:(BOOL)animated complete:(void(^)(void))complete;
-- (void)hideLoginLoading;
-@end
-
-@implementation TXCommonHandler
-+ (instancetype)sharedInstance {
-    static TXCommonHandler *instance = nil;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        instance = [[TXCommonHandler alloc] init];
-    });
-    return instance;
-}
-
-- (void)setAuthSDKInfo:(NSString *)secretInfo complete:(void(^)(NSDictionary *resultDic))complete {
-    if (complete) {
-        complete(@{@"resultCode": PNSCodeSuccess, @"msg": @"回退模式初始化成功"});
-    }
-}
-
-- (void)checkEnvAvailableWithAuthType:(PNSAuthType)authType complete:(void(^)(NSDictionary *resultDic))complete {
-    if (complete) {
-        complete(@{@"resultCode": @"600024", @"msg": @"回退模式不支持一键登录"});
-    }
-}
-
-- (void)accelerateLoginPageWithTimeout:(CGFloat)timeout complete:(void(^)(NSDictionary *resultDic))complete {
-    if (complete) {
-        complete(@{@"resultCode": @"600024", @"msg": @"回退模式不支持预取号"});
-    }
-}
-
-- (void)getLoginTokenWithTimeout:(CGFloat)timeout controller:(UIViewController *)controller model:(id)model complete:(void(^)(NSDictionary *resultDic))complete {
-    if (complete) {
-        complete(@{@"resultCode": @"600024", @"msg": @"回退模式不支持一键登录", @"token": @""});
-    }
-}
-
-- (void)cancelLoginVCAnimated:(BOOL)animated complete:(void(^)(void))complete {
-    if (complete) {
-        complete();
-    }
-}
-
-- (void)hideLoginLoading {
-    // 空实现
-}
-@end
-
-// 模拟TXCustomModel类
-@interface TXCustomModel : NSObject
-@property (nonatomic, assign) BOOL prefersStatusBarHidden;
-@property (nonatomic, strong) UIColor *navColor;
-@property (nonatomic, strong) NSAttributedString *navTitle;
-@property (nonatomic, strong) UIImage *navBackImage;
-@property (nonatomic, strong) UIImage *privacyNavBackImage;
-@property (nonatomic, copy) CGRect(^navBackButtonFrameBlock)(CGSize screenSize, CGSize superViewSize, CGRect frame);
-@property (nonatomic, strong) UIImage *logoImage;
-@property (nonatomic, assign) BOOL logoIsHidden;
-@property (nonatomic, copy) CGRect(^logoFrameBlock)(CGSize screenSize, CGSize superViewSize, CGRect frame);
-@property (nonatomic, strong) NSAttributedString *sloganText;
-@property (nonatomic, assign) BOOL sloganIsHidden;
-@property (nonatomic, copy) CGRect(^sloganFrameBlock)(CGSize screenSize, CGSize superViewSize, CGRect frame);
-@property (nonatomic, strong) NSAttributedString *numberText;
-@property (nonatomic, assign) BOOL numberIsHidden;
-@property (nonatomic, copy) CGRect(^numberFrameBlock)(CGSize screenSize, CGSize superViewSize, CGRect frame);
-@property (nonatomic, strong) UIColor *numberColor;
-@property (nonatomic, strong) UIFont *numberFont;
-@property (nonatomic, strong) NSAttributedString *loginBtnText;
-@property (nonatomic, strong) UIColor *loginBtnTextColor;
-@property (nonatomic, strong) UIColor *loginBtnBgColor;
-@property (nonatomic, strong) NSArray *loginBtnBgImgs;
-@property (nonatomic, assign) BOOL autoHideLoginLoading;
-@property (nonatomic, copy) CGRect(^loginBtnFrameBlock)(CGSize screenSize, CGSize superViewSize, CGRect frame);
-@property (nonatomic, strong) NSAttributedString *changeBtnTitle;
-@property (nonatomic, assign) BOOL changeBtnIsHidden;
-@property (nonatomic, copy) CGRect(^changeBtnFrameBlock)(CGSize screenSize, CGSize superViewSize, CGRect frame);
-@property (nonatomic, strong) NSArray *alertCornerRadiusArray;
-@property (nonatomic, copy) CGRect(^contentViewFrameBlock)(CGSize screenSize, CGSize contentSize, CGRect frame);
-@property (nonatomic, assign) NSTextAlignment privacyAlignment;
-@property (nonatomic, strong) NSArray *privacyOne;
-@property (nonatomic, strong) NSArray *privacyTwo;
-@property (nonatomic, assign) BOOL checkBoxIsChecked;
-@property (nonatomic, strong) UIFont *privacyFont;
-@property (nonatomic, strong) NSArray *privacyColors;
-@property (nonatomic, strong) NSString *privacyOperatorPreText;
-@property (nonatomic, strong) NSString *privacyOperatorSufText;
-@property (nonatomic, strong) NSString *privacyPreText;
-@property (nonatomic, strong) NSString *privacySufText;
-@property (nonatomic, copy) CGRect(^privacyFrameBlock)(CGSize screenSize, CGSize superViewSize, CGRect frame);
-@property (nonatomic, assign) BOOL checkBoxIsHidden;
-@property (nonatomic, assign) BOOL alertBarIsHidden;
-@property (nonatomic, copy) void(^customViewBlock)(UIView *superCustomView);
-@property (nonatomic, copy) void(^customViewLayoutBlock)(CGSize screenSize, CGRect contentViewFrame, CGRect navFrame, CGRect titleBarFrame, CGRect logoFrame, CGRect sloganFrame, CGRect numberFrame, CGRect loginFrame, CGRect changeBtnFrame, CGRect privacyFrame);
-@property (nonatomic, strong) NSAttributedString *alertTitle;
-@property (nonatomic, strong) UIImage *alertCloseImage;
-@end
-
-@implementation TXCustomModel
-@end
-
-// 模拟TXCommonUtils类
-@interface TXCommonUtils : NSObject
-+ (NSString *)getCurrentCarrierName;
-@end
-
-@implementation TXCommonUtils
-+ (NSString *)getCurrentCarrierName {
-    return @"回退模式";
 }
 @end
 
